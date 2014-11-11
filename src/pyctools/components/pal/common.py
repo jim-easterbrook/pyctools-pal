@@ -35,22 +35,14 @@ from pyctools.components.modulate.modulate import Modulate
 def To4Fsc():
     # 4fsc = 922 active samples/line, Rec 601 = 702 active samples/line
     xup, xdown = 461, 351
-    resize = Resize()
-    cfg = resize.get_config()
-    cfg['xup'] = xup
-    cfg['xdown'] = xdown
-    resize.set_config(cfg)
+    resize = Resize(xup=xup, xdown=xdown)
     resize.filter(FilterGeneratorCore(x_up=xup, x_down=xdown, x_ap=16))
     return resize
 
 def From4Fsc():
     # 4fsc = 922 active samples/line, Rec 601 = 702 active samples/line
     xup, xdown = 351, 461
-    resize = Resize()
-    cfg = resize.get_config()
-    cfg['xup'] = xup
-    cfg['xdown'] = xdown
-    resize.set_config(cfg)
+    resize = Resize(xup=xup, xdown=xdown)
     resize.filter(FilterGeneratorCore(x_up=xup, x_down=xdown, x_ap=16))
     return resize
 

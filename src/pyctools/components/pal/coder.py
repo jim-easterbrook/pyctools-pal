@@ -69,10 +69,7 @@ def Coder():
     prefilter = PreFilterUV()
     modulator = ModulateUV()
     merge = ToPAL()
-    setlevel = Arithmetic()
-    cfg = setlevel.get_config()
-    cfg['func'] = '((data - 16.0) * (140.0 / 219.0)) + 64.0'
-    setlevel.set_config(cfg)
+    setlevel = Arithmetic(func='((data - 16.0) * (140.0 / 219.0)) + 64.0')
     return Compound(
         prefilter = prefilter,
         modulator = modulator,

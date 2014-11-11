@@ -65,10 +65,7 @@ def PostFilter():
     return resize
 
 def Decoder():
-    setlevel = Arithmetic()
-    cfg = setlevel.get_config()
-    cfg['func'] = '((data - 64.0) * (219.0 / 140.0)) + 16.0'
-    setlevel.set_config(cfg)
+    setlevel = Arithmetic(func='((data - 64.0) * (219.0 / 140.0)) + 16.0')
     split = FromPAL()
     demod = ModulateUV()
     postfil = PostFilter()
