@@ -67,4 +67,5 @@ setup(name = 'pyctools.pal',
       namespace_packages = namespace_packages,
       package_dir = {'' : 'src'},
       install_requires = ['pyctools.core'],
+      zip_safe = False,
       )
