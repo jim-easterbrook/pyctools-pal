@@ -25,7 +25,8 @@ __all__ = ['Decoder', 'FromPAL']
 
 import numpy
 
-from pyctools.core import Compound, Frame
+from pyctools.core.compound import Compound
+from pyctools.core.frame import Frame
 from pyctools.components.arithmetic import Arithmetic
 from pyctools.components.colourspace.matrix import Matrix
 from pyctools.components.interp.gaussianfilter import GaussianFilterCore

@@ -27,7 +27,7 @@ import math
 
 import numpy
 
-from pyctools.core import Frame
+from pyctools.core.frame import Frame
 from pyctools.components.interp.filtergenerator import FilterGeneratorCore
 from pyctools.components.interp.resize import Resize
 from pyctools.components.modulate.modulate import Modulate
