@@ -25,16 +25,6 @@ version = '0.1.0'
 
 packages = find_packages('src')
 
-namespace_packages = []
-for package in packages:
-    init = os.path.join('src', package.replace('.', '/'), '__init__.py')
-    with open(init) as f:
-        for line in f.readlines():
-            if 'declare_namespace' in line:
-                # very likely a namespace package
-                namespace_packages.append(package)
-                break
-
 with open('README.rst') as f:
     long_description = f.read()
 url = 'https://github.com/jim-easterbrook/pyctools-pal'
@@ -53,7 +43,6 @@ setup(name = 'pyctools.pal',
           'License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)',
           'Operating System :: OS Independent',
           'Programming Language :: Python :: 2',
-          'Programming Language :: Python :: 2.6',
           'Programming Language :: Python :: 2.7',
           'Programming Language :: Python :: 3',
           'Topic :: Multimedia :: Graphics',
@@ -62,9 +51,9 @@ setup(name = 'pyctools.pal',
           'Topic :: Scientific/Engineering :: Visualization',
           ],
       license = 'GNU GPL',
-      platforms = ['POSIX', 'MacOS', 'Windows'],
+      platforms = ['POSIX', 'MacOS'],
       packages = packages,
-      namespace_packages = namespace_packages,
+      namespace_packages = packages,
       package_dir = {'' : 'src'},
       install_requires = ['pyctools.core'],
       zip_safe = False,
