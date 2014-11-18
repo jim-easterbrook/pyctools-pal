@@ -18,12 +18,30 @@
 #  <http://www.gnu.org/licenses/>.
 
 import os
-from setuptools import setup, find_packages
+from setuptools import setup
 import sys
 
 version = '0.1.0'
 
-packages = find_packages('src')
+# find packages
+packages = ['pyctools']
+for root, dirs, files in os.walk('src/pyctools'):
+    package = '.'.join(root.split(os.sep)[1:])
+    for name in dirs:
+        packages.append(package + '.' + name)
+
+# make sure each package is a "namespace package"
+init_text = "__import__('pkg_resources').declare_namespace(__name__)\n"
+for package in packages:
+    path = os.path.join('src', package.replace('.', os.sep), '__init__.py')
+    if os.path.exists(path):
+        with open(path) as f:
+            old_text = f.read()
+    else:
+        old_text = ''
+    if old_text != init_text:
+        with open(path, 'w') as f:
+            f.write(init_text)
 
 with open('README.rst') as f:
     long_description = f.read()
