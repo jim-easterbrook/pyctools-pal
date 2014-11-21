@@ -32,25 +32,17 @@ import numpy
 from pyctools.core.compound import Compound
 from pyctools.core.frame import Frame
 from pyctools.components.arithmetic import Arithmetic
+from pyctools.components.colourspace.rgbtoyuv import RGBtoYUV
 from pyctools.components.colourspace.matrix import Matrix
 from pyctools.components.interp.gaussianfilter import GaussianFilterCore
 from pyctools.components.interp.resize import Resize
+from pyctools.components.plumbing.collator import Collator
 
 from .common import ModulateUV
 
 def PreFilterUV():
-    filter_Y = numpy.array([[1.0]], dtype=numpy.float32)
-    filter_UV = GaussianFilterCore(x_sigma=1.659)
-    out_frame = Frame()
-    out_frame.data = [filter_Y, filter_UV.data[0], filter_UV.data[0]]
-    out_frame.type = 'fil'
-    audit = out_frame.metadata.get('audit')
-    audit += 'data = 3-component filter\n'
-    audit += '    Y filter = [[1.0]], U/V filter = {\n%s}\n' % (
-        filter_UV.metadata.get('audit'))
-    out_frame.metadata.set('audit', audit)
     resize = Resize()
-    resize.filter(out_frame)
+    resize.filter(GaussianFilterCore(x_sigma=1.659))
     return resize
 
 def ToPAL():
@@ -67,20 +59,21 @@ def ToPAL():
     return matrix
 
 def Coder():
-    prefilter = PreFilterUV()
-    modulator = ModulateUV()
-    merge = ToPAL()
-    setlevel = Arithmetic(func='((data - 16.0) * (140.0 / 219.0)) + 64.0')
     return Compound(
-        prefilter = prefilter,
-        modulator = modulator,
-        merge = merge,
-        setlevel = setlevel,
+        rgbyuv = RGBtoYUV(outframe_pool_len=5, matrix='601'),
+        collate = Collator(),
+        prefilter = PreFilterUV(),
+        modulator = ModulateUV(),
+        merge = ToPAL(),
+        setlevel = Arithmetic(func='((data - 16.0) * (140.0 / 219.0)) + 64.0'),
         linkages = {
-            ('self',      'input')  : ('prefilter', 'input'),
-            ('prefilter', 'output') : ('modulator', 'input'),
-            ('modulator', 'output') : ('merge',     'input'),
-            ('merge',     'output') : ('setlevel',  'input'),
-            ('setlevel',  'output') : ('self',      'output'),
+            ('self',      'input')     : ('rgbyuv',    'input'),
+            ('rgbyuv',    'output_Y')  : ('collate',   'input1'),
+            ('rgbyuv',    'output_UV') : ('prefilter', 'input'),
+            ('prefilter', 'output')    : ('modulator', 'input'),
+            ('modulator', 'output')    : ('collate',   'input2'),
+            ('collate',   'output')    : ('merge',     'input'),
+            ('merge',     'output')    : ('setlevel',  'input'),
+            ('setlevel',  'output')    : ('self',      'output'),
             }
         )

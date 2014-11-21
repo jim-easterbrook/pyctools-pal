@@ -47,7 +47,6 @@ def From4Fsc():
     return resize
 
 def ModulateUV():
-    cell_Y = numpy.array([[[1.0]]], dtype=numpy.float32)
     cell_U = numpy.empty([4, 8, 4], dtype=numpy.float32)
     cell_V = numpy.empty([4, 8, 4], dtype=numpy.float32)
     for z in range(cell_U.shape[0]):
@@ -60,11 +59,10 @@ def ModulateUV():
                 cell_V[z, y, x] = math.sin(math.pi * phase)
     modulate = Modulate()
     out_frame = Frame()
-    out_frame.data = [cell_Y, cell_U, cell_V]
+    out_frame.data = [cell_U, cell_V]
     out_frame.type = 'cell'
     audit = out_frame.metadata.get('audit')
-    audit += 'data = 3-component modulation cell\n'
-    audit += '    Y cell = unity, U/V cell = PAL subcarrier\n'
+    audit += 'data = PAL subcarrier modulation cell\n'
     out_frame.metadata.set('audit', audit)
     modulate.cell(out_frame)
     return modulate
