@@ -21,7 +21,7 @@
 
 """
 
-__all__ = ['Decoder', 'FromPAL']
+__all__ = ['Decoder', 'FromPAL', 'PostFilterY', 'PostFilterUV']
 
 import numpy
 
@@ -29,57 +29,71 @@ from pyctools.core.compound import Compound
 from pyctools.core.frame import Frame
 from pyctools.components.arithmetic import Arithmetic
 from pyctools.components.colourspace.matrix import Matrix
-from pyctools.components.interp.gaussianfilter import GaussianFilterCore
+from pyctools.components.colourspace.yuvtorgb import YUVtoRGB
 from pyctools.components.interp.resize import Resize
+from pyctools.components.plumbing.busbar import Busbar
 
 from .common import ModulateUV
 
 def FromPAL():
     out_frame = Frame()
     out_frame.data = [numpy.array(
-        [[1.0], [2.02 / 0.886], [1.14 / 0.701]], dtype=numpy.float32)]
+        [[2.02 / 0.886], [1.14 / 0.701]], dtype=numpy.float32)]
     out_frame.type = 'mat'
     audit = out_frame.metadata.get('audit')
-    audit += 'data = PAL -> YCbCr matrix\n'
+    audit += 'data = PAL -> CbCr matrix\n'
     audit += '    values: %s\n' % (str(out_frame.data[0]))
     out_frame.metadata.set('audit', audit)
     matrix = Matrix()
     matrix.matrix(out_frame)
     return matrix
 
-def PostFilter():
+def PostFilterY():
     filter_Y = numpy.array(
         [[27, -238, 47, 238, 876, 238, 47, -238, 27]],
         dtype=numpy.float32) / 1024.0
+    out_frame = Frame()
+    out_frame.data = [filter_Y]
+    out_frame.type = 'fil'
+    audit = out_frame.metadata.get('audit')
+    audit += 'data = Y notch filter\n'
+    out_frame.metadata.set('audit', audit)
+    resize = Resize()
+    resize.filter(out_frame)
+    return resize
+
+def PostFilterUV():
     filter_UV = numpy.array(
         [[1, 6, 19, 42, 71, 96, 106, 96, 71, 42, 19, 6, 1]],
         dtype=numpy.float32) / 576.0
     out_frame = Frame()
-    out_frame.data = [filter_Y, filter_UV, filter_UV]
+    out_frame.data = [filter_UV]
     out_frame.type = 'fil'
     audit = out_frame.metadata.get('audit')
-    audit += 'data = 3-component filter\n'
-    audit += '    Y filter = notch, U/V filter = lpf\n'
+    audit += 'data = UV low pass filter\n'
     out_frame.metadata.set('audit', audit)
     resize = Resize()
     resize.filter(out_frame)
     return resize
 
 def Decoder():
-    setlevel = Arithmetic(func='((data - 64.0) * (219.0 / 140.0)) + 16.0')
-    split = FromPAL()
-    demod = ModulateUV()
-    postfil = PostFilter()
     return Compound(
-        setlevel = setlevel,
-        split = split,
-        demod = demod,
-        postfil = postfil,
+        setlevel = Arithmetic(func='((data - 64.0) * (219.0 / 140.0)) + 16.0'),
+        split = Busbar(),
+        filterY = PostFilterY(),
+        yuvrgb = YUVtoRGB(matrix='601'),
+        matrix = FromPAL(),
+        demod = ModulateUV(),
+        filterUV = PostFilterUV(),
         linkages = {
-            ('self',     'input')  : ('setlevel', 'input'),
-            ('setlevel', 'output') : ('split',    'input'),
-            ('split',    'output') : ('demod',    'input'),
-            ('demod',    'output') : ('postfil',  'input'),
-            ('postfil',  'output') : ('self',     'output'),
+            ('self',     'input')   : ('setlevel', 'input'),
+            ('setlevel', 'output')  : ('split',    'input'),
+            ('split',    'output1') : ('filterY',  'input'),
+            ('filterY',  'output')  : ('yuvrgb',   'input_Y'),
+            ('split',    'output2') : ('matrix',   'input'),
+            ('matrix',   'output')  : ('demod',    'input'),
+            ('demod',    'output')  : ('filterUV', 'input'),
+            ('filterUV', 'output')  : ('yuvrgb',   'input_UV'),
+            ('yuvrgb',   'output')  : ('self',     'output'),
             }
         )
