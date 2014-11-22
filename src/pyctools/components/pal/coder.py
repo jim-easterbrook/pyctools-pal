@@ -47,8 +47,8 @@ def PreFilterUV():
 
 def ToPAL():
     out_frame = Frame()
-    out_frame.data = [numpy.array(
-        [[1.0, 2.0 * 0.886 / 2.02, 2.0 * 0.701 / 1.14]], dtype=numpy.float32)]
+    out_frame.data = numpy.array(
+        [[1.0, 2.0 * 0.886 / 2.02, 2.0 * 0.701 / 1.14]], dtype=numpy.float32)
     out_frame.type = 'mat'
     audit = out_frame.metadata.get('audit')
     audit += 'data = YCbCr -> PAL matrix\n'

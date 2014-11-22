@@ -37,8 +37,8 @@ from .common import ModulateUV
 
 def FromPAL():
     out_frame = Frame()
-    out_frame.data = [numpy.array(
-        [[2.02 / 0.886], [1.14 / 0.701]], dtype=numpy.float32)]
+    out_frame.data = numpy.array(
+        [[2.02 / 0.886], [1.14 / 0.701]], dtype=numpy.float32)
     out_frame.type = 'mat'
     audit = out_frame.metadata.get('audit')
     audit += 'data = PAL -> CbCr matrix\n'
@@ -50,10 +50,10 @@ def FromPAL():
 
 def PostFilterY():
     filter_Y = numpy.array(
-        [[27, -238, 47, 238, 876, 238, 47, -238, 27]],
-        dtype=numpy.float32) / 1024.0
+        [27, -238, 47, 238, 876, 238, 47, -238, 27],
+        dtype=numpy.float32).reshape(1, -1, 1) / 1024.0
     out_frame = Frame()
-    out_frame.data = [filter_Y]
+    out_frame.data = filter_Y
     out_frame.type = 'fil'
     audit = out_frame.metadata.get('audit')
     audit += 'data = Y notch filter\n'
@@ -64,10 +64,10 @@ def PostFilterY():
 
 def PostFilterUV():
     filter_UV = numpy.array(
-        [[1, 6, 19, 42, 71, 96, 106, 96, 71, 42, 19, 6, 1]],
-        dtype=numpy.float32) / 576.0
+        [1, 6, 19, 42, 71, 96, 106, 96, 71, 42, 19, 6, 1],
+        dtype=numpy.float32).reshape(1, -1, 1) / 576.0
     out_frame = Frame()
-    out_frame.data = [filter_UV]
+    out_frame.data = filter_UV
     out_frame.type = 'fil'
     audit = out_frame.metadata.get('audit')
     audit += 'data = UV low pass filter\n'
@@ -88,9 +88,9 @@ def Decoder():
         linkages = {
             ('self',     'input')   : ('setlevel', 'input'),
             ('setlevel', 'output')  : ('split',    'input'),
-            ('split',    'output1') : ('filterY',  'input'),
+            ('split',    'output0') : ('filterY',  'input'),
             ('filterY',  'output')  : ('yuvrgb',   'input_Y'),
-            ('split',    'output2') : ('matrix',   'input'),
+            ('split',    'output1') : ('matrix',   'input'),
             ('matrix',   'output')  : ('demod',    'input'),
             ('demod',    'output')  : ('filterUV', 'input'),
             ('filterUV', 'output')  : ('yuvrgb',   'input_UV'),

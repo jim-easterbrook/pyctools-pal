@@ -47,19 +47,18 @@ def From4Fsc():
     return resize
 
 def ModulateUV():
-    cell_U = numpy.empty([4, 8, 4], dtype=numpy.float32)
-    cell_V = numpy.empty([4, 8, 4], dtype=numpy.float32)
-    for z in range(cell_U.shape[0]):
-        for y in range(cell_U.shape[1]):
+    cell = numpy.empty([4, 8, 4, 2], dtype=numpy.float32)
+    for z in range(cell.shape[0]):
+        for y in range(cell.shape[1]):
             v_axis_switch = (((((y + 1) // 2) + z) % 2) * 2) - 1
-            for x in range(cell_U.shape[2]):
+            for x in range(cell.shape[2]):
                 phase = 0.75 + float((x - (y // 2) + (y % 2) - z) % 4) / 2.0
                 phase *= v_axis_switch
-                cell_U[z, y, x] = math.cos(math.pi * phase)
-                cell_V[z, y, x] = math.sin(math.pi * phase)
+                cell[z, y, x, 0] = math.cos(math.pi * phase)
+                cell[z, y, x, 1] = math.sin(math.pi * phase)
     modulate = Modulate()
     out_frame = Frame()
-    out_frame.data = [cell_U, cell_V]
+    out_frame.data = cell
     out_frame.type = 'cell'
     audit = out_frame.metadata.get('audit')
     audit += 'data = PAL subcarrier modulation cell\n'
