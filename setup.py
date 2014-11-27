@@ -17,8 +17,10 @@
 #  along with this program.  If not, see
 #  <http://www.gnu.org/licenses/>.
 
+from Cython.Distutils import build_ext
+import numpy
 import os
-from setuptools import setup
+from setuptools import setup, Extension
 import sys
 
 version = '0.1.0'
@@ -42,6 +44,26 @@ for package in packages:
     if old_text != init_text:
         with open(path, 'w') as f:
             f.write(init_text)
+
+# find Cython extensions
+ext_modules = []
+for root, dirs, files in os.walk('src/pyctools'):
+    for name in files:
+        base, ext = os.path.splitext(name)
+        if ext != '.pyx':
+            continue
+        ext_modules.append(Extension(
+            '.'.join(root.split(os.sep)[1:] + [base]),
+            [os.path.join(root, name)],
+            include_dirs = [numpy.get_include()],
+            extra_compile_args = [
+                '-fopenmp', '-Wno-maybe-uninitialized', '-Wno-unused-function',
+                '-Wno-implicit-function-declaration'],
+            extra_link_args = ['-fopenmp'],
+            ))
+
+# Use Cython version of 'build_ext' command
+cmdclass = {'build_ext': build_ext}
 
 with open('README.rst') as f:
     long_description = f.read()
@@ -72,7 +94,9 @@ setup(name = 'pyctools.pal',
       platforms = ['POSIX', 'MacOS'],
       packages = packages,
       namespace_packages = packages,
+      ext_modules = ext_modules,
       package_dir = {'' : 'src'},
       install_requires = ['pyctools.core'],
+      cmdclass = cmdclass,
       zip_safe = False,
       )
