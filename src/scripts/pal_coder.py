@@ -4,12 +4,12 @@
 import argparse
 import logging
 from pyctools.core.compound import Compound
-import pyctools.components.pal.coder
 import pyctools.components.qt.qtdisplay
 import pyctools.components.io.videofilewriter
-import pyctools.components.io.videofilereader
-import pyctools.components.io.dumpmetadata
 import pyctools.components.pal.common
+import pyctools.components.io.videofilereader
+import pyctools.components.pal.coder
+import pyctools.components.io.dumpmetadata
 
 class Network(object):
     def __init__(self):
@@ -24,7 +24,7 @@ class Network(object):
                    'config': "{'framerate': 40}",
                    'pos': (450.0, -50.0)},
     'filereader': {   'class': 'pyctools.components.io.videofilereader.VideoFileReader',
-                      'config': "{'path': '/home/jim/Videos/DVD/election_87.avi', 'looping': 'repeat'}",
+                      'config': "{'path': '/home/jim/Videos/test_seqs/mobcal.avi'}",
                       'pos': (-300.0, -50.0)},
     'filewriter': {   'class': 'pyctools.components.io.videofilewriter.VideoFileWriter',
                       'config': "{'path': '/home/jim/Documents/projects/pyctools-pal/coded_pal.avi', '16bit': 'on', 'encoder': '-c:v ffv1 -pix_fmt gray16le'}",

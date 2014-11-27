@@ -31,6 +31,7 @@ import numpy
 
 from pyctools.core.compound import Compound
 from pyctools.core.frame import Frame
+from pyctools.components.adder import Adder
 from pyctools.components.arithmetic import Arithmetic
 from pyctools.components.colourspace.rgbtoyuv import RGBtoYUV
 from pyctools.components.colourspace.matrix import Matrix
@@ -52,28 +53,41 @@ def ToPAL():
     out_frame.type = 'mat'
     audit = out_frame.metadata.get('audit')
     audit += 'data = YCbCr -> PAL matrix\n'
-    audit += '    values: %s\n' % (str(out_frame.data[0]))
+    audit += '    values: %s\n' % (str(out_frame.data))
     out_frame.metadata.set('audit', audit)
     matrix = Matrix()
     matrix.matrix(out_frame)
     return matrix
 
+def UVtoC():
+    mat = Frame()
+    mat.data = numpy.array(
+        [[2.0 * 0.886 / 2.02, 2.0 * 0.701 / 1.14]], dtype=numpy.float32)
+    mat.type = 'mat'
+    audit = mat.metadata.get('audit')
+    audit += 'data = Modulated CbCr -> PAL chroma matrix\n'
+    audit += '    values: %s\n' % (str(mat.data))
+    mat.metadata.set('audit', audit)
+    matrix = Matrix()
+    matrix.matrix(mat)
+    return matrix
+
 def Coder():
     return Compound(
         rgbyuv = RGBtoYUV(outframe_pool_len=5, matrix='601'),
-        collate = Collator(),
+        adder = Adder(),
         prefilter = PreFilterUV(),
         modulator = ModulateUV(),
-        merge = ToPAL(),
-        setlevel = Arithmetic(func='((data - 16.0) * (140.0 / 219.0)) + 64.0'),
+        matrix = UVtoC(),
+        setlevel = Arithmetic(func='((data - pt_float(16.0)) * pt_float(140.0 / 219.0)) + pt_float(64.0)'),
         linkages = {
             ('self',      'input')     : ('rgbyuv',    'input'),
-            ('rgbyuv',    'output_Y')  : ('collate',   'input1'),
+            ('rgbyuv',    'output_Y')  : ('adder',     'input0'),
             ('rgbyuv',    'output_UV') : ('prefilter', 'input'),
             ('prefilter', 'output')    : ('modulator', 'input'),
-            ('modulator', 'output')    : ('collate',   'input2'),
-            ('collate',   'output')    : ('merge',     'input'),
-            ('merge',     'output')    : ('setlevel',  'input'),
+            ('modulator', 'output')    : ('matrix',    'input'),
+            ('matrix',    'output')    : ('adder',     'input1'),
+            ('adder',     'output')    : ('setlevel',  'input'),
             ('setlevel',  'output')    : ('self',      'output'),
             }
         )

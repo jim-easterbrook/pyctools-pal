@@ -42,7 +42,7 @@ def FromPAL():
     out_frame.type = 'mat'
     audit = out_frame.metadata.get('audit')
     audit += 'data = PAL -> CbCr matrix\n'
-    audit += '    values: %s\n' % (str(out_frame.data[0]))
+    audit += '    values: %s\n' % (str(out_frame.data))
     out_frame.metadata.set('audit', audit)
     matrix = Matrix()
     matrix.matrix(out_frame)
