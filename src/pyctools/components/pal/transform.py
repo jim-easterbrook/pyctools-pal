@@ -49,7 +49,7 @@ class FilterUV(Transformer):
         x_blk = x_len // x_tile
         y_blk = y_len // y_tile
         in_data = in_data.reshape(y_blk, y_tile, x_blk, x_tile)
-        out_data = numpy.empty(in_data.shape, dtype=pt_complex)
+        out_data = numpy.zeros(in_data.shape, dtype=pt_complex)
         transform_filter(out_data, in_data, threshold)
         out_data = out_data.reshape(y_len, x_len, 1)
         audit = out_frame.metadata.get('audit')
