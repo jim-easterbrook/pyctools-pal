@@ -4,6 +4,7 @@
 import argparse
 import logging
 from pyctools.core.compound import Compound
+import pyctools.components.pal.transform
 import pyctools.components.qt.qtdisplay
 import pyctools.components.deinterlace.halfsize
 import pyctools.components.fft.window
@@ -13,12 +14,11 @@ import pyctools.components.io.dumpmetadata
 import pyctools.components.subtracter
 import pyctools.components.fft.tile
 import pyctools.components.pal.common
-import pyctools.components.pal.decoder
 import pyctools.components.plumbing.busbar
-import pyctools.components.pal.transform
 import pyctools.components.colourspace.yuvtorgb
 import pyctools.components.modulate.modulate
 import pyctools.components.io.videofilereader
+import pyctools.components.pal.decoder
 
 class Network(object):
     def __init__(self):
@@ -47,7 +47,7 @@ class Network(object):
     'filereader': {   'class': 'pyctools.components.io.videofilereader.VideoFileReader',
                       'config': "{'path': '/home/jim/Documents/projects/pyctools-pal/coded_pal.avi', '16bit': 'on', 'type': 'Y', 'looping': 'repeat'}",
                       'pos': (-50.0, 0.0)},
-    'filterUV': {   'class': 'pyctools.components.pal.transform.FilterUV',
+    'filterUV': {   'class': 'pyctools.components.pal.transform.FTFilterUV',
                     'config': "{'ytile': 16, 'xtile': 32, 'mode': 'thresh', 'threshold': 0.7}",
                     'pos': (950.0, 150.0)},
     'ifft': {   'class': 'pyctools.components.fft.fft.FFT',
@@ -62,7 +62,7 @@ class Network(object):
     'matrix': {   'class': 'pyctools.components.pal.decoder.FromPAL',
                   'config': '{}',
                   'pos': (1800.0, 0.0)},
-    'postfilter': {   'class': 'pyctools.components.pal.decoder.PostFilterUV',
+    'postfilter': {   'class': 'pyctools.components.pal.transform.PostFilterUV',
                       'config': '{}',
                       'pos': (2100.0, 0.0)},
     'reinterlace': {   'class': 'pyctools.components.deinterlace.halfsize.HalfSize',

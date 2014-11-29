@@ -21,18 +21,20 @@
 
 """
 
-__all__ = ['FilterUV']
+__all__ = ['FTFilterUV', 'PostFilterUV']
 
 import math
 
 import numpy
 
+from pyctools.components.interp.filtergenerator import FilterGeneratorCore
+from pyctools.components.interp.resize import Resize
 from pyctools.core.base import Transformer
 from pyctools.core.config import ConfigEnum, ConfigFloat, ConfigInt
 from pyctools.core.types import pt_complex
 from .transformcore import transform_filter
 
-class FilterUV(Transformer):
+class FTFilterUV(Transformer):
     def initialise(self):
         self.config['xtile'] = ConfigInt(min_value=0, dynamic=True)
         self.config['ytile'] = ConfigInt(min_value=0, dynamic=True)
@@ -62,3 +64,9 @@ class FilterUV(Transformer):
         out_frame.metadata.set('audit', audit)
         out_frame.data = out_data
         return True
+
+
+def PostFilterUV():
+    resize = Resize()
+    resize.filter(FilterGeneratorCore(x_ap=16, x_cut=25))
+    return resize
