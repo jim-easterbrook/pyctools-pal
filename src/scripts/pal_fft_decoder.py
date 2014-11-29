@@ -48,7 +48,7 @@ class Network(object):
                       'config': "{'path': '/home/jim/Documents/projects/pyctools-pal/coded_pal.avi', '16bit': 'on', 'type': 'Y', 'looping': 'repeat'}",
                       'pos': (-50.0, 0.0)},
     'filterUV': {   'class': 'pyctools.components.pal.transform.FilterUV',
-                    'config': "{'ytile': 16, 'xtile': 32, 'threshold': 0.6}",
+                    'config': "{'ytile': 16, 'xtile': 32, 'mode': 'thresh', 'threshold': 0.7}",
                     'pos': (950.0, 150.0)},
     'ifft': {   'class': 'pyctools.components.fft.fft.FFT',
                 'config': "{'ytile': 16, 'xtile': 32, 'inverse': 'on', 'output': 'real'}",

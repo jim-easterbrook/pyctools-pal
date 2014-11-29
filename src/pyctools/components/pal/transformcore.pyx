@@ -24,12 +24,12 @@ ctypedef numpy.float32_t FLOAT_t
 
 def transform_filter(numpy.ndarray[CMPLX_t, ndim=4] out_data,
                      numpy.ndarray[CMPLX_t, ndim=4] in_data,
-                     FLOAT_t threshold):
+                     char mode, FLOAT_t threshold):
     cdef:
         unsigned int x_blk, y_blk, x_tile, y_tile
         unsigned int i, j, x, y, x_conj, y_conj, x_ref, y_ref, x_ref_conj, y_ref_conj
         CMPLX_t in_val, ref_val, out_val, out_ref
-        FLOAT_t m_in, m_ref, gain
+        FLOAT_t m_in, m_ref
     y_blk = out_data.shape[0]
     y_tile = out_data.shape[1]
     x_blk = out_data.shape[2]
@@ -42,13 +42,20 @@ def transform_filter(numpy.ndarray[CMPLX_t, ndim=4] out_data,
             y_conj = (y_tile - y) % y_tile
             y_ref = ((y_tile // 2) + y_tile - y) % y_tile
             y_ref_conj = (y_tile - y_ref) % y_tile
+            if x == x_ref and y == y_ref:
+                for j in range(y_blk):
+                    for i in range(x_blk):
+                        in_val = in_data[j, y, i, x]
+                        out_data[j, y, i, x] = in_val
+                        out_data[j, y_conj, i, x_conj] = in_val.conjugate()
+                continue
             for j in range(y_blk):
                 for i in range(x_blk):
                     in_val = in_data[j, y, i, x]
                     ref_val = in_data[j, y_ref, i, x_ref]
                     m_in = abs(in_val)
                     m_ref = abs(ref_val)
-                    if threshold == 0.0:
+                    if mode == 'l':
                         if m_in < m_ref:
                             out_val = in_val
                             out_ref = ref_val * m_in / m_ref
@@ -59,9 +66,8 @@ def transform_filter(numpy.ndarray[CMPLX_t, ndim=4] out_data,
                         if (m_in < m_ref * threshold or
                                 m_ref < m_in * threshold):
                             continue
-                        else:
-                            out_val = in_val
-                            out_ref = ref_val
+                        out_val = in_val
+                        out_ref = ref_val
                     out_data[j, y, i, x] = out_val
                     out_data[j, y_conj, i, x_conj] = out_val.conjugate()
                     out_data[j, y_ref, i, x_ref] = out_ref
