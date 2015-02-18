@@ -3,7 +3,7 @@ Pyctools-PAL
 
 PAL coding and decoding with Pyctools.
 
-This uses `Pyctools <https://github.com/jim-easterbrook/pyctools>`_ to simulate a PAL coder and decoder.
+This uses `Pyctools <https://github.com/jim-easterbrook/pyctools>`_ to simulate a PAL coder and two decoders.
 PAL is the colour system used for analogue television in (most of) western Europe and many other parts of the world.
 It is still of some interest because of its use in TV archives.
 (And it presents some interesting technical problems.)
@@ -30,8 +30,8 @@ You should clone the GitHub repository, or download and extract a zip or tar.gz 
 Use
 ---
 
-The ``src/scripts`` directory contains a PAL coder and PAL decoder that can be loaded into the Pyctools graph editor.
-Start with the coder so you can generate a PAL file to use with the decoder.
+The ``src/scripts`` directory contains a PAL coder, normal PAL decoder and 2D `Transform PAL Decoder <http://www.jim-easterbrook.me.uk/pal/>`_ that can be loaded into the Pyctools graph editor.
+Start with the coder so you can generate a PAL file to use with the decoders.
 Before running either script you need to configure the file reader and/or writer components' ``path`` values.
 
 Licence
@@ -39,7 +39,7 @@ Licence
 
 | Pyctools-PAL - PAL coding and decoding with Pyctools.
 | http://github.com/jim-easterbrook/pyctools-pal
-| Copyright (C) 2014  Jim Easterbrook  jim@jim-easterbrook.me.uk
+| Copyright (C) 2014-15  Jim Easterbrook  jim@jim-easterbrook.me.uk
 
 This program is free software: you can redistribute it and/or
 modify it under the terms of the GNU General Public License as
