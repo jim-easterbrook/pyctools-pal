@@ -21,7 +21,7 @@
 
 """
 
-__all__ = ['FTFilterUV', 'PostFilterUV']
+__all__ = ['FTFilterUV', 'FTFilterUV_2Dthresh', 'PostFilterUV']
 
 import math
 
@@ -31,16 +31,58 @@ from pyctools.components.interp.filtergenerator import FilterGeneratorCore
 from pyctools.components.interp.resize import Resize
 from pyctools.core.base import Transformer
 from pyctools.core.config import ConfigEnum, ConfigFloat, ConfigInt
-from pyctools.core.types import pt_complex
+from pyctools.core.frame import Frame
+from pyctools.core.types import pt_complex, pt_float
 from .transformcore import transform_filter
 
 class FTFilterUV(Transformer):
+    inputs = ['input', 'threshold']
+
     def initialise(self):
         self.config['xtile'] = ConfigInt(min_value=0, dynamic=True)
         self.config['ytile'] = ConfigInt(min_value=0, dynamic=True)
         self.config['mode'] = ConfigEnum(
-            choices=('limit', 'thresh'), dynamic=True)
+            choices=('limit', 'thresh', '2Dthresh'), dynamic=True)
         self.config['threshold'] = ConfigFloat(min_value=0.0, dynamic=True)
+        self.threshold_frame = None
+        self.threshold_values = numpy.zeros((1, 1), dtype=pt_float)
+
+    def process_start(self):
+        super(FTFilterUV, self).process_start()
+        self.update_config()
+        if (self.config['mode'] != '2Dthresh' and
+                            not self.input_buffer['threshold'].available()):
+            # create null threshold frame and put it on input queue so
+            # we don't wait for one to arrive
+            self.threshold_frame = Frame()
+            self.threshold(self.threshold_frame)
+
+    def get_threshold(self):
+        new_threshold = self.input_buffer['threshold'].peek()
+        if new_threshold == self.threshold_frame:
+            return True
+        threshold_values = new_threshold.as_numpy(dtype=numpy.float32)
+        if threshold_values.ndim != 2:
+            self.logger.warning('Threshold input must be 2 dimensional')
+            return False
+        x_tile = self.config['xtile']
+        y_tile = self.config['ytile']
+        xlen = 1 + (x_tile // 8)
+        ylen = 1 + (y_tile // 2)
+        if threshold_values.shape != (ylen, xlen):
+            self.logger.warning(
+                'Threshold input dimensions must be %d x %d', ylen, xlen)
+            return False
+        self.threshold_frame = new_threshold
+        self.threshold_values = numpy.zeros((y_tile, x_tile), dtype=pt_float)
+        for x in range(xlen):
+            x_out = x + (x_tile // 8)
+            for y in range(ylen):
+                self.threshold_values[y, x_out] = threshold_values[y, x]
+                y_out = (y_tile - y) % y_tile
+                self.threshold_values[y_out, x_out] = threshold_values[y, x]
+        self.fil_count = None
+        return True
 
     def transform(self, in_frame, out_frame):
         self.update_config()
@@ -48,6 +90,8 @@ class FTFilterUV(Transformer):
         y_tile = self.config['ytile']
         mode = self.config['mode']
         threshold = self.config['threshold']
+        if mode == '2Dthresh' and not self.get_threshold():
+            return False
         in_data = in_frame.as_numpy(dtype=pt_complex)
         x_len = in_data.shape[1]
         y_len = in_data.shape[0]
@@ -55,7 +99,8 @@ class FTFilterUV(Transformer):
         y_blk = y_len // y_tile
         in_data = in_data.reshape(y_blk, y_tile, x_blk, x_tile)
         out_data = numpy.zeros(in_data.shape, dtype=pt_complex)
-        transform_filter(out_data, in_data, ord(mode[0]), threshold)
+        transform_filter(
+            out_data, in_data, ord(mode[0]), threshold, self.threshold_values)
         out_data = out_data.reshape(y_len, x_len, 1)
         audit = out_frame.metadata.get('audit')
         audit += 'data = TransformFilter(data)\n'
@@ -64,6 +109,28 @@ class FTFilterUV(Transformer):
         out_frame.metadata.set('audit', audit)
         out_frame.data = out_data
         return True
+
+
+def FTFilterUV_2Dthresh():
+    thresholds = numpy.array(
+        [[6, 6, 6, 6, 6],
+         [6, 6, 6, 6, 6],
+         [6, 6, 6, 6, 6],
+         [6, 6, 6, 6, 6],
+         [6, 6, 6, 6, 6],
+         [6, 6, 6, 6, 6],
+         [6, 6, 6, 6, 6],
+         [6, 6, 6, 6, 6],
+         [6, 6, 6, 6, 6]], dtype=numpy.float32) / numpy.float32(10.0)
+    out_frame = Frame()
+    out_frame.data = thresholds
+    out_frame.type = 'thresh'
+    audit = out_frame.metadata.get('audit')
+    audit += 'data = transform PAL decoder thresholds\n'
+    out_frame.metadata.set('audit', audit)
+    ft_filter = FTFilterUV(xtile=32, ytile=16, mode='2Dthresh')
+    ft_filter.threshold(out_frame)
+    return ft_filter
 
 
 def PostFilterUV():

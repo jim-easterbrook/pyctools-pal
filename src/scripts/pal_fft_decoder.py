@@ -4,7 +4,6 @@
 import argparse
 import logging
 from pyctools.core.compound import Compound
-import pyctools.components.pal.transform
 import pyctools.components.qt.qtdisplay
 import pyctools.components.deinterlace.halfsize
 import pyctools.components.fft.window
@@ -14,6 +13,7 @@ import pyctools.components.io.dumpmetadata
 import pyctools.components.subtracter
 import pyctools.components.fft.tile
 import pyctools.components.pal.common
+import pyctools.components.pal.transform
 import pyctools.components.plumbing.busbar
 import pyctools.components.colourspace.yuvtorgb
 import pyctools.components.modulate.modulate
@@ -135,15 +135,19 @@ if __name__ == '__main__':
     QtGui.QApplication.setAttribute(Qt.AA_X11InitThreads)
     app = QtGui.QApplication([])
 
-    logging.basicConfig(level=logging.DEBUG)
     comp = Network().make()
     cnf = comp.get_config()
     parser = argparse.ArgumentParser()
     cnf.parser_add(parser)
+    parser.add_argument('-v', '--verbose', action='count', default=0,
+                        help='increase verbosity of log messages')
     args = parser.parse_args()
+    logging.basicConfig(level=logging.ERROR - (args.verbose * 10))
+    del args.verbose
     cnf.parser_set(args)
     comp.set_config(cnf)
     comp.start()
     app.exec_()
+
     comp.stop()
     comp.join()

@@ -24,7 +24,8 @@ ctypedef numpy.float32_t FLOAT_t
 
 def transform_filter(numpy.ndarray[CMPLX_t, ndim=4] out_data,
                      numpy.ndarray[CMPLX_t, ndim=4] in_data,
-                     char mode, FLOAT_t threshold):
+                     char mode, FLOAT_t threshold,
+                     numpy.ndarray[FLOAT_t, ndim=2] threshold_values):
     cdef:
         unsigned int x_blk, y_blk, x_tile, y_tile
         unsigned int i, j, x, y, x_conj, y_conj, x_ref, y_ref, x_ref_conj, y_ref_conj
@@ -62,6 +63,12 @@ def transform_filter(numpy.ndarray[CMPLX_t, ndim=4] out_data,
                         else:
                             out_val = in_val * m_ref / m_in
                             out_ref = ref_val
+                    elif mode == '2':
+                        if (m_in < m_ref * threshold_values[y, x] or
+                                m_ref < m_in * threshold_values[y, x]):
+                            continue
+                        out_val = in_val
+                        out_ref = ref_val
                     else:
                         if (m_in < m_ref * threshold or
                                 m_ref < m_in * threshold):
