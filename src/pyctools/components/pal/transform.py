@@ -47,8 +47,7 @@ class FTFilterUV(Transformer):
         self.threshold_frame = None
         self.threshold_values = numpy.zeros((1, 1), dtype=pt_float)
 
-    def process_start(self):
-        super(FTFilterUV, self).process_start()
+    def on_start(self):
         self.update_config()
         if (self.config['mode'] != '2Dthresh' and
                             not self.input_buffer['threshold'].available()):

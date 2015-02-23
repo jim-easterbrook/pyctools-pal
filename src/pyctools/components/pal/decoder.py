@@ -31,7 +31,6 @@ from pyctools.components.arithmetic import Arithmetic
 from pyctools.components.colourspace.matrix import Matrix
 from pyctools.components.colourspace.yuvtorgb import YUVtoRGB
 from pyctools.components.interp.resize import Resize
-from pyctools.components.plumbing.busbar import Busbar
 
 from .common import ModulateUV
 
@@ -78,8 +77,8 @@ def PostFilterUV():
 
 def Decoder():
     return Compound(
-        setlevel = Arithmetic(func='((data - 64.0) * (219.0 / 140.0)) + 16.0'),
-        split = Busbar(),
+        setlevel = Arithmetic(
+            func='((data - pt_float(64)) * pt_float(219.0 / 140.0)) + pt_float(16)'),
         filterY = PostFilterY(),
         yuvrgb = YUVtoRGB(matrix='601'),
         matrix = FromPAL(),
@@ -87,10 +86,9 @@ def Decoder():
         filterUV = PostFilterUV(),
         linkages = {
             ('self',     'input')   : ('setlevel', 'input'),
-            ('setlevel', 'output')  : ('split',    'input'),
-            ('split',    'output0') : ('filterY',  'input'),
+            ('setlevel', 'output')  : ('filterY',  'input',
+                                       'matrix',   'input'),
             ('filterY',  'output')  : ('yuvrgb',   'input_Y'),
-            ('split',    'output1') : ('matrix',   'input'),
             ('matrix',   'output')  : ('demod',    'input'),
             ('demod',    'output')  : ('filterUV', 'input'),
             ('filterUV', 'output')  : ('yuvrgb',   'input_UV'),
