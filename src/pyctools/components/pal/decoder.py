@@ -77,21 +77,21 @@ def PostFilterUV():
 
 def Decoder():
     return Compound(
-        setlevel = Arithmetic(
-            func='((data - pt_float(64)) * pt_float(219.0 / 140.0)) + pt_float(16)'),
+        setlevel = Arithmetic(config={
+            'func' : '((data - pt_float(64)) * pt_float(219.0 / 140.0)) + pt_float(16)'}),
         filterY = PostFilterY(),
-        yuvrgb = YUVtoRGB(matrix='601'),
+        yuvrgb = YUVtoRGB(config={'matrix' : '601'}),
         matrix = FromPAL(),
         demod = ModulateUV(),
         filterUV = PostFilterUV(),
         linkages = {
-            ('self',     'input')   : ('setlevel', 'input'),
-            ('setlevel', 'output')  : ('filterY',  'input',
-                                       'matrix',   'input'),
-            ('filterY',  'output')  : ('yuvrgb',   'input_Y'),
-            ('matrix',   'output')  : ('demod',    'input'),
-            ('demod',    'output')  : ('filterUV', 'input'),
-            ('filterUV', 'output')  : ('yuvrgb',   'input_UV'),
-            ('yuvrgb',   'output')  : ('self',     'output'),
+            ('self',     'input')   : [('setlevel', 'input')],
+            ('setlevel', 'output')  : [('filterY',  'input'),
+                                       ('matrix',   'input')],
+            ('filterY',  'output')  : [('yuvrgb',   'input_Y')],
+            ('matrix',   'output')  : [('demod',    'input')],
+            ('demod',    'output')  : [('filterUV', 'input')],
+            ('filterUV', 'output')  : [('yuvrgb',   'input_UV')],
+            ('yuvrgb',   'output')  : [('self',     'output')],
             }
         )

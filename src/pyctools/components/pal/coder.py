@@ -74,20 +74,21 @@ def UVtoC():
 
 def Coder():
     return Compound(
-        rgbyuv = RGBtoYUV(outframe_pool_len=5, matrix='601'),
+        rgbyuv = RGBtoYUV(config={'outframe_pool_len' : 5, 'matrix' : '601'}),
         adder = Adder(),
         prefilter = PreFilterUV(),
         modulator = ModulateUV(),
         matrix = UVtoC(),
-        setlevel = Arithmetic(func='((data - pt_float(16.0)) * pt_float(140.0 / 219.0)) + pt_float(64.0)'),
+        setlevel = Arithmetic(config={
+            'func' : '((data - pt_float(16.0)) * pt_float(140.0 / 219.0)) + pt_float(64.0)'}),
         linkages = {
-            ('self',      'input')     : ('rgbyuv',    'input'),
-            ('rgbyuv',    'output_Y')  : ('adder',     'input0'),
-            ('rgbyuv',    'output_UV') : ('prefilter', 'input'),
-            ('prefilter', 'output')    : ('modulator', 'input'),
-            ('modulator', 'output')    : ('matrix',    'input'),
-            ('matrix',    'output')    : ('adder',     'input1'),
-            ('adder',     'output')    : ('setlevel',  'input'),
-            ('setlevel',  'output')    : ('self',      'output'),
+            ('self',      'input')     : [('rgbyuv',    'input')],
+            ('rgbyuv',    'output_Y')  : [('adder',     'input0')],
+            ('rgbyuv',    'output_UV') : [('prefilter', 'input')],
+            ('prefilter', 'output')    : [('modulator', 'input')],
+            ('modulator', 'output')    : [('matrix',    'input')],
+            ('matrix',    'output')    : [('adder',     'input1')],
+            ('adder',     'output')    : [('setlevel',  'input')],
+            ('setlevel',  'output')    : [('self',      'output')],
             }
         )
