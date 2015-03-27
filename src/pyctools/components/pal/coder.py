@@ -25,7 +25,7 @@ PAL picture.
 
 """
 
-__all__ = ['Coder', 'PreFilterUV', 'ToPAL']
+__all__ = ['Coder', 'PreFilterUV', 'ToPAL', 'UVtoC']
 
 import numpy
 
