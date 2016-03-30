@@ -12,7 +12,7 @@ import pyctools.components.deinterlace.halfsize
 import pyctools.components.pal.common
 import pyctools.components.colourspace.yuvtorgb
 import pyctools.components.fft.fft
-import pyctools.components.modulate.modulate
+import pyctools.components.modulate
 import pyctools.components.pal.transform
 import pyctools.components.arithmetic
 import pyctools.components.io.videofilereader
@@ -48,7 +48,7 @@ class Network(object):
     'inv_win_func': {   'class': 'pyctools.components.fft.window.InverseWindow',
                         'config': "{'ytile': 16, 'xtile': 32, 'xoff': 16, 'yoff': 8, 'fade': 'minsnr'}",
                         'pos': (500.0, 150.0)},
-    'invwindow': {   'class': 'pyctools.components.modulate.modulate.Modulate',
+    'invwindow': {   'class': 'pyctools.components.modulate.Modulate',
                      'config': '{}',
                      'pos': (1250.0, 0.0)},
     'matrix': {   'class': 'pyctools.components.pal.decoder.FromPAL',
@@ -78,7 +78,7 @@ class Network(object):
     'win_func': {   'class': 'pyctools.components.fft.window.Kaiser',
                     'config': "{'ytile': 16, 'xtile': 32, 'alpha': 0.9}",
                     'pos': (350.0, 150.0)},
-    'window': {   'class': 'pyctools.components.modulate.modulate.Modulate',
+    'window': {   'class': 'pyctools.components.modulate.Modulate',
                   'config': '{}',
                   'pos': (650.0, 0.0)},
     'yuvtorgb': {   'class': 'pyctools.components.colourspace.yuvtorgb.YUVtoRGB',

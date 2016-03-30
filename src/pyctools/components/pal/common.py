@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 #  Pyctools-pal - PAL coding and decoding with Pyctools.
 #  http://github.com/jim-easterbrook/pyctools-pal
-#  Copyright (C) 2014  Jim Easterbrook  jim@jim-easterbrook.me.uk
+#  Copyright (C) 2014-16  Jim Easterbrook  jim@jim-easterbrook.me.uk
 #
 #  This program is free software: you can redistribute it and/or
 #  modify it under the terms of the GNU General Public License as
@@ -30,7 +30,7 @@ import numpy
 from pyctools.core.frame import Frame
 from pyctools.components.interp.filtergenerator import FilterGeneratorCore
 from pyctools.components.interp.resize import Resize
-from pyctools.components.modulate.modulate import Modulate
+from pyctools.components.modulate import Modulate
 
 def To4Fsc():
     # 4fsc = 922 active samples/line, Rec 601 = 702 active samples/line
