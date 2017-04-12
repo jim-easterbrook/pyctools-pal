@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 #  Pyctools-pal - PAL coding and decoding with Pyctools.
 #  http://github.com/jim-easterbrook/pyctools-pal
-#  Copyright (C) 2014-16  Jim Easterbrook  jim@jim-easterbrook.me.uk
+#  Copyright (C) 2014-17  Jim Easterbrook  jim@jim-easterbrook.me.uk
 #
 #  This program is free software: you can redistribute it and/or
 #  modify it under the terms of the GNU General Public License as
@@ -32,21 +32,21 @@ from pyctools.components.interp.filtergenerator import FilterGeneratorCore
 from pyctools.components.interp.resize import Resize
 from pyctools.components.modulate import Modulate
 
-def To4Fsc():
+def To4Fsc(config={}):
     # 4fsc = 922 active samples/line, Rec 601 = 702 active samples/line
     xup, xdown = 461, 351
-    resize = Resize(xup=xup, xdown=xdown)
+    resize = Resize(xup=xup, xdown=xdown, config=config)
     resize.filter(FilterGeneratorCore(x_up=xup, x_down=xdown, x_ap=16))
     return resize
 
-def From4Fsc():
+def From4Fsc(config={}):
     # 4fsc = 922 active samples/line, Rec 601 = 702 active samples/line
     xup, xdown = 351, 461
-    resize = Resize(xup=xup, xdown=xdown)
+    resize = Resize(xup=xup, xdown=xdown, config=config)
     resize.filter(FilterGeneratorCore(x_up=xup, x_down=xdown, x_ap=16))
     return resize
 
-def ModulateUV():
+def ModulateUV(config={}):
     cell = numpy.empty([4, 8, 4, 2], dtype=numpy.float32)
     for z in range(cell.shape[0]):
         for y in range(cell.shape[1]):
@@ -56,7 +56,7 @@ def ModulateUV():
                 phase *= v_axis_switch
                 cell[z, y, x, 0] = math.cos(math.pi * phase)
                 cell[z, y, x, 1] = math.sin(math.pi * phase)
-    modulate = Modulate()
+    modulate = Modulate(config=config)
     out_frame = Frame()
     out_frame.data = cell
     out_frame.type = 'cell'

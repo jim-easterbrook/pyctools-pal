@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 #  Pyctools-pal - PAL coding and decoding with Pyctools.
 #  http://github.com/jim-easterbrook/pyctools-pal
-#  Copyright (C) 2014  Jim Easterbrook  jim@jim-easterbrook.me.uk
+#  Copyright (C) 2014-17  Jim Easterbrook  jim@jim-easterbrook.me.uk
 #
 #  This program is free software: you can redistribute it and/or
 #  modify it under the terms of the GNU General Public License as
@@ -34,7 +34,7 @@ from pyctools.components.interp.resize import Resize
 
 from .common import ModulateUV
 
-def FromPAL():
+def FromPAL(config={}):
     out_frame = Frame()
     out_frame.data = numpy.array(
         [[2.02 / 0.886], [1.14 / 0.701]], dtype=numpy.float32)
@@ -43,11 +43,11 @@ def FromPAL():
     audit += 'data = PAL -> CbCr matrix\n'
     audit += '    values: %s\n' % (str(out_frame.data))
     out_frame.metadata.set('audit', audit)
-    matrix = Matrix()
+    matrix = Matrix(config=config)
     matrix.matrix(out_frame)
     return matrix
 
-def PostFilterY():
+def PostFilterY(config={}):
     filter_Y = numpy.array(
         [27, -238, 47, 238, 876, 238, 47, -238, 27],
         dtype=numpy.float32).reshape(1, -1, 1) / 1024.0
@@ -57,11 +57,11 @@ def PostFilterY():
     audit = out_frame.metadata.get('audit')
     audit += 'data = Y notch filter\n'
     out_frame.metadata.set('audit', audit)
-    resize = Resize()
+    resize = Resize(config=config)
     resize.filter(out_frame)
     return resize
 
-def PostFilterUV():
+def PostFilterUV(config={}):
     filter_UV = numpy.array(
         [1, 6, 19, 42, 71, 96, 106, 96, 71, 42, 19, 6, 1],
         dtype=numpy.float32).reshape(1, -1, 1) / 576.0
@@ -71,16 +71,17 @@ def PostFilterUV():
     audit = out_frame.metadata.get('audit')
     audit += 'data = UV low pass filter\n'
     out_frame.metadata.set('audit', audit)
-    resize = Resize()
+    resize = Resize(config=config)
     resize.filter(out_frame)
     return resize
 
-def Decoder():
+def Decoder(config={}):
     return Compound(
-        setlevel = Arithmetic(config={
-            'func' : '((data - pt_float(64)) * pt_float(219.0 / 140.0)) + pt_float(16)'}),
+        config = config,
+        setlevel = Arithmetic(
+            func='((data - pt_float(64)) * pt_float(219.0 / 140.0)) + pt_float(16)'),
         filterY = PostFilterY(),
-        yuvrgb = YUVtoRGB(config={'matrix' : '601'}),
+        yuvrgb = YUVtoRGB(matrix='601'),
         matrix = FromPAL(),
         demod = ModulateUV(),
         filterUV = PostFilterUV(),

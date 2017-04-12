@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 #  Pyctools-pal - PAL coding and decoding with Pyctools.
 #  http://github.com/jim-easterbrook/pyctools-pal
-#  Copyright (C) 2014  Jim Easterbrook  jim@jim-easterbrook.me.uk
+#  Copyright (C) 2014-17  Jim Easterbrook  jim@jim-easterbrook.me.uk
 #
 #  This program is free software: you can redistribute it and/or
 #  modify it under the terms of the GNU General Public License as
@@ -41,12 +41,12 @@ from pyctools.components.plumbing.collator import Collator
 
 from .common import ModulateUV
 
-def PreFilterUV():
-    resize = Resize()
+def PreFilterUV(config={}):
+    resize = Resize(config=config)
     resize.filter(GaussianFilterCore(x_sigma=1.659))
     return resize
 
-def ToPAL():
+def ToPAL(config={}):
     out_frame = Frame()
     out_frame.data = numpy.array(
         [[1.0, 2.0 * 0.886 / 2.02, 2.0 * 0.701 / 1.14]], dtype=numpy.float32)
@@ -55,11 +55,11 @@ def ToPAL():
     audit += 'data = YCbCr -> PAL matrix\n'
     audit += '    values: %s\n' % (str(out_frame.data))
     out_frame.metadata.set('audit', audit)
-    matrix = Matrix()
+    matrix = Matrix(config=config)
     matrix.matrix(out_frame)
     return matrix
 
-def UVtoC():
+def UVtoC(config={}):
     mat = Frame()
     mat.data = numpy.array(
         [[2.0 * 0.886 / 2.02, 2.0 * 0.701 / 1.14]], dtype=numpy.float32)
@@ -68,19 +68,20 @@ def UVtoC():
     audit += 'data = Modulated CbCr -> PAL chroma matrix\n'
     audit += '    values: %s\n' % (str(mat.data))
     mat.metadata.set('audit', audit)
-    matrix = Matrix()
+    matrix = Matrix(config=config)
     matrix.matrix(mat)
     return matrix
 
-def Coder():
+def Coder(config={}):
     return Compound(
-        rgbyuv = RGBtoYUV(config={'outframe_pool_len' : 5, 'matrix' : '601'}),
+        config = config,
+        rgbyuv = RGBtoYUV(outframe_pool_len=5, matrix='601'),
         adder = Adder(),
         prefilter = PreFilterUV(),
         modulator = ModulateUV(),
         matrix = UVtoC(),
-        setlevel = Arithmetic(config={
-            'func' : '((data - pt_float(16.0)) * pt_float(140.0 / 219.0)) + pt_float(64.0)'}),
+        setlevel = Arithmetic(
+            func='((data - pt_float(16.0)) * pt_float(140.0 / 219.0)) + pt_float(64.0)'),
         linkages = {
             ('self',      'input')     : [('rgbyuv',    'input')],
             ('rgbyuv',    'output_Y')  : [('adder',     'input0')],

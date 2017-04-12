@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 #  Pyctools-pal - PAL coding and decoding with Pyctools.
 #  http://github.com/jim-easterbrook/pyctools-pal
-#  Copyright (C) 2014  Jim Easterbrook  jim@jim-easterbrook.me.uk
+#  Copyright (C) 2014-17  Jim Easterbrook  jim@jim-easterbrook.me.uk
 #
 #  This program is free software: you can redistribute it and/or
 #  modify it under the terms of the GNU General Public License as
@@ -110,7 +110,7 @@ class FTFilterUV(Transformer):
         return True
 
 
-def FTFilterUV_2Dthresh():
+def FTFilterUV_2Dthresh(config={}):
     thresholds = numpy.array(
         [[6, 6, 6, 6, 6],
          [6, 6, 6, 6, 6],
@@ -127,12 +127,12 @@ def FTFilterUV_2Dthresh():
     audit = out_frame.metadata.get('audit')
     audit += 'data = transform PAL decoder thresholds\n'
     out_frame.metadata.set('audit', audit)
-    ft_filter = FTFilterUV(xtile=32, ytile=16, mode='2Dthresh')
+    ft_filter = FTFilterUV(xtile=32, ytile=16, mode='2Dthresh', config=config)
     ft_filter.threshold(out_frame)
     return ft_filter
 
 
-def PostFilterUV():
-    resize = Resize()
+def PostFilterUV(config={}):
+    resize = Resize(config=config)
     resize.filter(FilterGeneratorCore(x_ap=16, x_cut=25))
     return resize
