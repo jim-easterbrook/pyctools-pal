@@ -39,11 +39,10 @@ class FTFilterUV(Transformer):
     inputs = ['input', 'threshold']
 
     def initialise(self):
-        self.config['xtile'] = ConfigInt(min_value=0, dynamic=True)
-        self.config['ytile'] = ConfigInt(min_value=0, dynamic=True)
-        self.config['mode'] = ConfigEnum(
-            choices=('limit', 'thresh', '2Dthresh'), dynamic=True)
-        self.config['threshold'] = ConfigFloat(min_value=0.0, dynamic=True)
+        self.config['xtile'] = ConfigInt(min_value=0)
+        self.config['ytile'] = ConfigInt(min_value=0)
+        self.config['mode'] = ConfigEnum(choices=('limit', 'thresh', '2Dthresh'))
+        self.config['threshold'] = ConfigFloat(min_value=0.0)
         self.threshold_frame = None
         self.threshold_values = numpy.zeros((1, 1), dtype=pt_float)
 
