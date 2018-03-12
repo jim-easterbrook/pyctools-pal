@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 #  Pyctools-PAL - PAL coding and decoding with Pyctools.
 #  http://github.com/jim-easterbrook/pyctools-pal
-#  Copyright (C) 2014-16  Jim Easterbrook  jim@jim-easterbrook.me.uk
+#  Copyright (C) 2014-18  Jim Easterbrook  jim@jim-easterbrook.me.uk
 #
 #  This program is free software: you can redistribute it and/or
 #  modify it under the terms of the GNU General Public License as
@@ -18,55 +18,23 @@
 #  <http://www.gnu.org/licenses/>.
 
 from Cython.Distutils import build_ext
-import numpy
 import os
-from setuptools import setup, Extension
+from setuptools import setup
 import sys
+
+from pyctools.setup import find_ext_modules, find_packages, write_init_files
 
 version = '0.1.0'
 
 # find packages
-packages = ['pyctools']
-for root, dirs, files in os.walk('src/pyctools'):
-    package = '.'.join(root.split(os.sep)[1:])
-    for name in dirs:
-        packages.append(package + '.' + name)
+packages = find_packages()
 
-# make sure each package is a "namespace package"
-init_text = """__import__('pkg_resources').declare_namespace(__name__)
-
-try:
-    from .__doc__ import __doc__
-except ImportError:
-    pass
-"""
-for package in packages:
-    path = os.path.join('src', package.replace('.', os.sep), '__init__.py')
-    if os.path.exists(path):
-        with open(path) as f:
-            old_text = f.read()
-    else:
-        old_text = ''
-    if old_text != init_text:
-        with open(path, 'w') as f:
-            f.write(init_text)
+# Make sure each package is a "pkgutil-style namespace package"
+# See https://packaging.python.org/guides/packaging-namespace-packages/
+write_init_files(packages)
 
 # find Cython extensions
-ext_modules = []
-for root, dirs, files in os.walk('src/pyctools'):
-    for name in files:
-        base, ext = os.path.splitext(name)
-        if ext != '.pyx':
-            continue
-        ext_modules.append(Extension(
-            '.'.join(root.split(os.sep)[1:] + [base]),
-            [os.path.join(root, name)],
-            include_dirs = [numpy.get_include()],
-            extra_compile_args = [
-                '-fopenmp', '-Wno-maybe-uninitialized', '-Wno-unused-function',
-                '-Wno-implicit-function-declaration'],
-            extra_link_args = ['-fopenmp'],
-            ))
+ext_modules = find_ext_modules()
 
 # Use Cython version of 'build_ext' command
 cmdclass = {'build_ext': build_ext}
@@ -99,10 +67,9 @@ setup(name = 'pyctools.pal',
       license = 'GNU GPL',
       platforms = ['POSIX', 'MacOS'],
       packages = packages,
-      namespace_packages = packages,
       ext_modules = ext_modules,
       package_dir = {'' : 'src'},
-      install_requires = ['pyctools.core'],
+      install_requires = ['pyctools.core >= 0.4.1'],
       cmdclass = cmdclass,
       zip_safe = False,
       )
