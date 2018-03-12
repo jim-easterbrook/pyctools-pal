@@ -4,36 +4,51 @@
 import argparse
 import logging
 from pyctools.core.compound import Compound
-import pyctools.components.pal.common
 import pyctools.components.pal.decoder
-import pyctools.components.io.videofilereader
 import pyctools.components.io.dumpmetadata
+import pyctools.components.pal.common
 import pyctools.components.qt.qtdisplay
+import pyctools.components.io.videofilereader
 
 class Network(object):
     components = \
 {   'audit': {   'class': 'pyctools.components.io.dumpmetadata.DumpMetadata',
-                 'config': '{}',
-                 'pos': (500.0, 150.0)},
+                 'config': "{'raw': 0, 'outframe_pool_len': 3}",
+                 'pos': (420.0, 260.0)},
     'decoder': {   'class': 'pyctools.components.pal.decoder.Decoder',
-                   'config': '{}',
-                   'pos': (200.0, 150.0)},
+                   'config': "{'yuvrgb': {'matrix': '601', "
+                             "'outframe_pool_len': 3, 'range': 'studio'}, "
+                             "'setlevel': {'func': '((data - pt_float(64)) "
+                             "* pt_float(219.0 / 140.0)) + pt_float(16)', "
+                             "'outframe_pool_len': 3}, 'demod': "
+                             "{'outframe_pool_len': 3}, 'matrix': "
+                             "{'outframe_pool_len': 3}, 'filterUV': "
+                             "{'ydown': 1, 'xup': 1, 'yup': 1, "
+                             "'outframe_pool_len': 3, 'xdown': 1}, "
+                             "'filterY': {'ydown': 1, 'xup': 1, 'yup': 1, "
+                             "'outframe_pool_len': 3, 'xdown': 1}}",
+                   'expanded': False,
+                   'pos': (170.0, 150.0)},
     'display': {   'class': 'pyctools.components.qt.qtdisplay.QtDisplay',
-                   'config': "{'stats': True, 'framerate': 50}",
-                   'pos': (650.0, 150.0)},
+                   'config': "{'shrink': 1, 'expand': 1, "
+                             "'outframe_pool_len': 3, 'title': '', "
+                             "'repeat': 1, 'sync': 1, 'framerate': 50, "
+                             "'stats': 1}",
+                   'pos': (420.0, 150.0)},
     'filereader': {   'class': 'pyctools.components.io.videofilereader.VideoFileReader',
-                      'config': "{'16bit': True, 'path': "
-                                "'/home/jim/Documents/projects/pyctools-pal/coded_pal.avi', "
-                                "'type': 'Y', 'looping': 'repeat'}",
+                      'config': "{'type': 'Y', 'looping': 'repeat', "
+                                "'16bit': 1, 'outframe_pool_len': 3, "
+                                "'path': "
+                                "'/home/jim/Documents/projects/pyctools-pal/coded_pal.avi'}",
                       'pos': (50.0, 150.0)},
     'resample': {   'class': 'pyctools.components.pal.common.From4Fsc',
-                    'config': "{'xdown': 461, 'xup': 351}",
-                    'pos': (350.0, 150.0)}}
+                    'config': "{'ydown': 1, 'xup': 351, 'yup': 1, "
+                              "'outframe_pool_len': 3, 'xdown': 461}",
+                    'pos': (290.0, 150.0)}}
     linkages = \
-{   ('audit', 'output'): [('display', 'input')],
-    ('decoder', 'output'): [('resample', 'input')],
+{   ('decoder', 'output'): [('resample', 'input')],
     ('filereader', 'output'): [('decoder', 'input')],
-    ('resample', 'output'): [('audit', 'input')]}
+    ('resample', 'output'): [('display', 'input'), ('audit', 'input')]}
 
     def make(self):
         comps = {}
@@ -42,8 +57,8 @@ class Network(object):
         return Compound(linkages=self.linkages, **comps)
 
 if __name__ == '__main__':
-    from pyctools.core.qt import Qt, QtWidgets
-    QtWidgets.QApplication.setAttribute(Qt.AA_X11InitThreads)
+    from PyQt5 import QtCore, QtWidgets
+    QtWidgets.QApplication.setAttribute(QtCore.Qt.AA_X11InitThreads)
     app = QtWidgets.QApplication([])
 
     comp = Network().make()

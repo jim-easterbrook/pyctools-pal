@@ -4,86 +4,102 @@
 import argparse
 import logging
 from pyctools.core.compound import Compound
-import pyctools.components.fft.window
-import pyctools.components.fft.tile
-import pyctools.components.qt.qtdisplay
 import pyctools.components.subtracter
-import pyctools.components.deinterlace.halfsize
+import pyctools.components.io.dumpmetadata
+import pyctools.components.pal.transform
+import pyctools.components.io.videofilereader
+import pyctools.components.fft.window
+import pyctools.components.modulate
+import pyctools.components.fft.tile
 import pyctools.components.pal.common
+import pyctools.components.deinterlace.halfsize
 import pyctools.components.colourspace.yuvtorgb
 import pyctools.components.fft.fft
-import pyctools.components.modulate
-import pyctools.components.pal.transform
-import pyctools.components.arithmetic
-import pyctools.components.io.videofilereader
 import pyctools.components.pal.decoder
-import pyctools.components.io.dumpmetadata
+import pyctools.components.arithmetic
+import pyctools.components.qt.qtdisplay
 
 class Network(object):
     components = \
 {   'audit': {   'class': 'pyctools.components.io.dumpmetadata.DumpMetadata',
-                 'config': '{}',
-                 'pos': (2450.0, 50.0)},
+                 'config': "{'outframe_pool_len': 3, 'raw': 0}",
+                 'pos': (2060.0, -40.0)},
     'deinterlace': {   'class': 'pyctools.components.deinterlace.halfsize.HalfSize',
-                       'config': "{'topfirst': 'on'}",
-                       'pos': (350.0, 0.0)},
+                       'config': "{'outframe_pool_len': 3, 'inverse': 0, "
+                                 "'topfirst': 1}",
+                       'pos': (350.0, -40.0)},
     'demod': {   'class': 'pyctools.components.pal.common.ModulateUV',
-                 'config': '{}',
-                 'pos': (1850.0, 0.0)},
+                 'config': "{'outframe_pool_len': 3}",
+                 'pos': (1560.0, -40.0)},
     'display': {   'class': 'pyctools.components.qt.qtdisplay.QtDisplay',
-                   'config': "{'repeat': 'on', 'stats': 'on', 'sync': 'on'}",
-                   'pos': (2450.0, -150.0)},
+                   'config': "{'outframe_pool_len': 3, 'title': '', "
+                             "'shrink': 1, 'stats': 1, 'sync': 1, 'expand': "
+                             "1, 'framerate': 25, 'repeat': 1}",
+                   'pos': (2060.0, -150.0)},
     'fft': {   'class': 'pyctools.components.fft.fft.FFT',
-               'config': "{'ytile': 16, 'xtile': 32}",
-               'pos': (800.0, 0.0)},
+               'config': "{'outframe_pool_len': 3, 'output': 'complex', "
+                         "'ytile': 16, 'inverse': 0, 'xtile': 32}",
+               'pos': (710.0, -40.0)},
     'filereader': {   'class': 'pyctools.components.io.videofilereader.VideoFileReader',
-                      'config': "{'path': '/home/jim/Documents/projects/pyctools-pal/coded_pal.avi', '16bit': 'on', 'type': 'Y', 'looping': 'repeat'}",
-                      'pos': (50.0, -150.0)},
+                      'config': "{'looping': 'repeat', 'outframe_pool_len': "
+                                "3, '16bit': 1, 'path': "
+                                "'/home/jim/Documents/projects/pyctools-pal/coded_pal.avi', "
+                                "'type': 'Y'}",
+                      'pos': (100.0, -150.0)},
     'filterUV': {   'class': 'pyctools.components.pal.transform.FTFilterUV',
-                    'config': "{'ytile': 16, 'xtile': 32, 'mode': 'thresh', 'threshold': 0.7}",
-                    'pos': (950.0, 0.0)},
+                    'config': "{'mode': 'thresh', 'outframe_pool_len': 3, "
+                              "'threshold': 0.7, 'ytile': 16, 'xtile': 32}",
+                    'pos': (830.0, -40.0)},
     'ifft': {   'class': 'pyctools.components.fft.fft.FFT',
-                'config': "{'ytile': 16, 'xtile': 32, 'inverse': 'on', 'output': 'real'}",
-                'pos': (1100.0, 0.0)},
+                'config': "{'outframe_pool_len': 3, 'output': 'real', "
+                          "'ytile': 16, 'inverse': 1, 'xtile': 32}",
+                'pos': (950.0, -40.0)},
     'inv_win_func': {   'class': 'pyctools.components.fft.window.InverseWindow',
-                        'config': "{'ytile': 16, 'xtile': 32, 'xoff': 16, 'yoff': 8, 'fade': 'minsnr'}",
-                        'pos': (500.0, 150.0)},
+                        'config': "{'yoff': 8, 'fade': 'minsnr', 'xoff': "
+                                  "16, 'ytile': 16, 'xtile': 32}",
+                        'pos': (460.0, 70.0)},
     'invwindow': {   'class': 'pyctools.components.modulate.Modulate',
-                     'config': '{}',
-                     'pos': (1250.0, 0.0)},
+                     'config': "{'outframe_pool_len': 3}",
+                     'pos': (1070.0, -40.0)},
     'matrix': {   'class': 'pyctools.components.pal.decoder.FromPAL',
-                  'config': '{}',
-                  'pos': (1700.0, 0.0)},
+                  'config': "{'outframe_pool_len': 3}",
+                  'pos': (1440.0, -40.0)},
     'postfilter': {   'class': 'pyctools.components.pal.transform.PostFilterUV',
-                      'config': '{}',
-                      'pos': (2000.0, 0.0)},
+                      'config': "{'outframe_pool_len': 3, 'xdown': 1, "
+                                "'ydown': 1, 'yup': 1, 'xup': 1}",
+                      'pos': (1680.0, -40.0)},
     'reinterlace': {   'class': 'pyctools.components.deinterlace.halfsize.HalfSize',
-                       'config': "{'inverse': 'on', 'topfirst': 'on'}",
-                       'pos': (1550.0, 0.0)},
+                       'config': "{'outframe_pool_len': 3, 'inverse': 1, "
+                                 "'topfirst': 1}",
+                       'pos': (1310.0, -40.0)},
     'resample': {   'class': 'pyctools.components.pal.common.From4Fsc',
-                    'config': "{'xdown': 461, 'xup': 351}",
-                    'pos': (2300.0, -150.0)},
+                    'config': "{'outframe_pool_len': 3, 'xdown': 461, "
+                              "'ydown': 1, 'yup': 1, 'xup': 351}",
+                    'pos': (1930.0, -150.0)},
     'setlevel': {   'class': 'pyctools.components.arithmetic.Arithmetic',
-                    'config': "{'outframe_pool_len': 12, 'func': '((data - 64.0) * (219.0 / 140.0)) + 16.0'}",
-                    'pos': (200.0, -150.0)},
+                    'config': "{'outframe_pool_len': 12, 'func': '((data - "
+                              "64.0) * (219.0 / 140.0)) + 16.0'}",
+                    'pos': (220.0, -150.0)},
     'subtract': {   'class': 'pyctools.components.subtracter.Subtracter',
-                    'config': '{}',
-                    'pos': (1700.0, -150.0)},
+                    'config': "{'outframe_pool_len': 3}",
+                    'pos': (1440.0, -150.0)},
     'tile': {   'class': 'pyctools.components.fft.tile.Tile',
-                'config': "{'ytile': 16, 'xtile': 32, 'xoff': 16, 'yoff': 8}",
-                'pos': (500.0, 0.0)},
+                'config': "{'outframe_pool_len': 3, 'yoff': 8, 'xoff': 16, "
+                          "'ytile': 16, 'xtile': 32}",
+                'pos': (470.0, -40.0)},
     'untile': {   'class': 'pyctools.components.fft.tile.UnTile',
-                  'config': '{}',
-                  'pos': (1400.0, 0.0)},
+                  'config': "{'outframe_pool_len': 3}",
+                  'pos': (1190.0, -40.0)},
     'win_func': {   'class': 'pyctools.components.fft.window.Kaiser',
-                    'config': "{'ytile': 16, 'xtile': 32, 'alpha': 0.9}",
-                    'pos': (350.0, 150.0)},
+                    'config': "{'ytile': 16, 'alpha': 0.9, 'xtile': 32}",
+                    'pos': (340.0, 70.0)},
     'window': {   'class': 'pyctools.components.modulate.Modulate',
-                  'config': '{}',
-                  'pos': (650.0, 0.0)},
+                  'config': "{'outframe_pool_len': 3}",
+                  'pos': (590.0, -40.0)},
     'yuvtorgb': {   'class': 'pyctools.components.colourspace.yuvtorgb.YUVtoRGB',
-                    'config': "{'matrix': '601'}",
-                    'pos': (2150.0, -150.0)}}
+                    'config': "{'matrix': '601', 'outframe_pool_len': 3, "
+                              "'range': 'studio'}",
+                    'pos': (1810.0, -150.0)}}
     linkages = \
 {   ('deinterlace', 'output'): [('tile', 'input')],
     ('demod', 'output'): [('postfilter', 'input')],
@@ -109,14 +125,13 @@ class Network(object):
     def make(self):
         comps = {}
         for name, component in self.components.items():
-            comps[name] = eval(component['class'])(**eval(component['config']))
+            comps[name] = eval(component['class'])(config=eval(component['config']))
         return Compound(linkages=self.linkages, **comps)
 
 if __name__ == '__main__':
-    from PyQt4 import QtGui
-    from PyQt4.QtCore import Qt
-    QtGui.QApplication.setAttribute(Qt.AA_X11InitThreads)
-    app = QtGui.QApplication([])
+    from PyQt5 import QtCore, QtWidgets
+    QtWidgets.QApplication.setAttribute(QtCore.Qt.AA_X11InitThreads)
+    app = QtWidgets.QApplication([])
 
     comp = Network().make()
     cnf = comp.get_config()
