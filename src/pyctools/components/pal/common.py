@@ -66,14 +66,31 @@ class ModulateUV(Modulate):
     def __init__(self, config={}, **kwds):
         super(ModulateUV, self).__init__(config=config, **kwds)
         cell = numpy.empty([4, 8, 4, 2], dtype=numpy.float32)
+        # phase is in "quarter cycles"
+        phase = 2.5     # integer part of start is arbitrary
+        v_axis_switch = 1
         for z in range(cell.shape[0]):
-            for y in range(cell.shape[1]):
-                v_axis_switch = (((((y + 1) // 2) + z) % 2) * 2) - 1
-                for x in range(cell.shape[2]):
-                    phase = 0.75 + float((x - (y // 2) + (y % 2) - z) % 4) / 2.0
-                    cell[z, y, x, 0] = math.cos(math.pi * phase)
-                    phase *= v_axis_switch
-                    cell[z, y, x, 1] = math.sin(math.pi * phase)
+            for f in range(2):
+                for y in range(f, cell.shape[1], 2):
+                    phase = phase % 4
+                    for x in range(cell.shape[2]):
+                        cell[z, y, x, 0] = math.sin(phase * math.pi / 2.0)
+                        cell[z, y, x, 1] = math.cos(phase * math.pi / 2.0) * v_axis_switch
+                        # 4 fsc sampling, so fsc advances by 1/4 cycle per sample
+                        phase += 1
+                    # "quarter line offset" retards by 1/4 cycle per field line
+                    phase -= 1
+                    v_axis_switch *= -1
+                # 313 lines in 1st field, 312 lines in 2nd
+                if f == 0:
+                    remainder = 313 - (cell.shape[1] // 2)
+                else:
+                    remainder = 312 - (cell.shape[1] // 2)
+                phase -= remainder
+                if remainder % 2:
+                    v_axis_switch *= -1
+                # "25 Hz offset" adds 1/2 cycle per field period
+                phase += 2
         cell_frame = Frame()
         cell_frame.data = cell
         cell_frame.type = 'cell'
