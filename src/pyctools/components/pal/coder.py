@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 #  Pyctools-pal - PAL coding and decoding with Pyctools.
 #  http://github.com/jim-easterbrook/pyctools-pal
-#  Copyright (C) 2014-17  Jim Easterbrook  jim@jim-easterbrook.me.uk
+#  Copyright (C) 2014-18  Jim Easterbrook  jim@jim-easterbrook.me.uk
 #
 #  This program is free software: you can redistribute it and/or
 #  modify it under the terms of the GNU General Public License as
@@ -17,79 +17,72 @@
 #  along with this program.  If not, see
 #  <http://www.gnu.org/licenses/>.
 
-"""Normal PAL coder components.
-
-Converts RGB pictures to PAL. Input is assumed to be sampled at
-13.5MHz. Other formats (e.g. HDTV) will work but not make a legitimate
-PAL picture.
-
-"""
-
-__all__ = ['Coder', 'PreFilterUV', 'ToPAL', 'UVtoC']
+__all__ = ['Coder', 'PreFilterUV', 'UVtoC']
 
 import numpy
 
 from pyctools.core.compound import Compound
 from pyctools.core.frame import Frame
-from pyctools.components.adder import Adder
-from pyctools.components.arithmetic import Arithmetic
+from pyctools.components.arithmetic import Arithmetic2
 from pyctools.components.colourspace.rgbtoyuv import RGBtoYUV
 from pyctools.components.colourspace.matrix import Matrix
 from pyctools.components.interp.gaussianfilter import GaussianFilterCore
 from pyctools.components.interp.resize import Resize
-from pyctools.components.plumbing.collator import Collator
 
 from .common import ModulateUV
 
-def PreFilterUV(config={}):
-    resize = Resize(config=config)
-    resize.filter(GaussianFilterCore(x_sigma=1.659))
-    return resize
+class PreFilterUV(Resize):
+    """Gaussian low-pass filter suitable for filtering chrominance
+    before modulation.
 
-def ToPAL(config={}):
-    out_frame = Frame()
-    out_frame.data = numpy.array(
-        [[1.0, 2.0 * 0.886 / 2.02, 2.0 * 0.701 / 1.14]], dtype=numpy.float32)
-    out_frame.type = 'mat'
-    audit = out_frame.metadata.get('audit')
-    audit += 'data = YCbCr -> PAL matrix\n'
-    audit += '    values: %s\n' % (str(out_frame.data))
-    out_frame.metadata.set('audit', audit)
-    matrix = Matrix(config=config)
-    matrix.matrix(out_frame)
-    return matrix
+    """
+    def __init__(self, config={}, **kwds):
+        super(PreFilterUV, self).__init__(config=config, **kwds)
+        self.filter(GaussianFilterCore(x_sigma=1.659))
 
-def UVtoC(config={}):
-    mat = Frame()
-    mat.data = numpy.array(
-        [[2.0 * 0.886 / 2.02, 2.0 * 0.701 / 1.14]], dtype=numpy.float32)
-    mat.type = 'mat'
-    audit = mat.metadata.get('audit')
-    audit += 'data = Modulated CbCr -> PAL chroma matrix\n'
-    audit += '    values: %s\n' % (str(mat.data))
-    mat.metadata.set('audit', audit)
-    matrix = Matrix(config=config)
-    matrix.matrix(mat)
-    return matrix
 
-def Coder(config={}):
-    return Compound(
-        config = config,
-        rgbyuv = RGBtoYUV(outframe_pool_len=5, matrix='601'),
-        adder = Adder(),
-        prefilter = PreFilterUV(),
-        modulator = ModulateUV(),
-        matrix = UVtoC(),
-        setlevel = Arithmetic(
-            func='((data - pt_float(16.0)) * pt_float(140.0 / 219.0)) + pt_float(64.0)'),
-        linkages = {
-            ('self',      'input')     : [('rgbyuv',    'input')],
-            ('rgbyuv',    'output_Y')  : [('adder',     'input0')],
-            ('rgbyuv',    'output_UV') : [('prefilter', 'input')],
-            ('prefilter', 'output')    : [('modulator', 'input')],
-            ('modulator', 'output')    : [('matrix',    'input')],
-            ('matrix',    'output')    : [('adder',     'input1')],
-            ('adder',     'output')    : [('setlevel',  'input')],
-            ('setlevel',  'output')    : [('self',      'output')],
-            }
-        )
+class UVtoC(Matrix):
+    """Matrix modulated Cb,Cr to a single chroma component.
+
+    This includes level conversions as specified in the "White Book".
+
+    """
+    def __init__(self, config={}, **kwds):
+        super(UVtoC, self).__init__(config=config, **kwds)
+        mat = Frame()
+        mat.data = numpy.array(
+            [[2.0 * 0.886 / 2.02, 2.0 * 0.701 / 1.14]], dtype=numpy.float32)
+        mat.type = 'mat'
+        audit = mat.metadata.get('audit')
+        audit += 'data = Modulated CbCr -> PAL chroma matrix\n'
+        audit += '    values: %s\n' % (str(mat.data))
+        mat.metadata.set('audit', audit)
+        self.matrix(mat)
+
+
+class Coder(Compound):
+    """Conventional PAL coder.
+
+    The input is RGB, assumed to be Rec 601 13.5 MHz sampled. The output
+    is sampled at 4 fsc. Other input sampling rates will work, but the
+    output will not be a valid PAL signal.
+
+    """
+    def __init__(self, config={}, **kwds):
+        super(Coder, self).__init__(
+            rgbyuv = RGBtoYUV(outframe_pool_len=5, matrix='601'),
+            prefilter = PreFilterUV(),
+            modulator = ModulateUV(),
+            matrix = UVtoC(),
+            assemble = Arithmetic2(
+                func='(((data1 + data2) - pt_float(16.0)) * pt_float(140.0 / 219.0)) + pt_float(64.0)'),
+            linkages = {
+                ('self',      'input')     : [('rgbyuv',    'input')],
+                ('rgbyuv',    'output_Y')  : [('assemble',  'input1')],
+                ('rgbyuv',    'output_UV') : [('prefilter', 'input')],
+                ('prefilter', 'output')    : [('modulator', 'input')],
+                ('modulator', 'output')    : [('matrix',    'input')],
+                ('matrix',    'output')    : [('assemble',  'input2')],
+                ('assemble',  'output')    : [('self',      'output')],
+                },
+            config=config, **kwds)

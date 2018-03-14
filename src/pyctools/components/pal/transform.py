@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 #  Pyctools-pal - PAL coding and decoding with Pyctools.
 #  http://github.com/jim-easterbrook/pyctools-pal
-#  Copyright (C) 2014-17  Jim Easterbrook  jim@jim-easterbrook.me.uk
+#  Copyright (C) 2014-18  Jim Easterbrook  jim@jim-easterbrook.me.uk
 #
 #  This program is free software: you can redistribute it and/or
 #  modify it under the terms of the GNU General Public License as
@@ -16,10 +16,6 @@
 #  You should have received a copy of the GNU General Public License
 #  along with this program.  If not, see
 #  <http://www.gnu.org/licenses/>.
-
-"""Transform PAL decoder components.
-
-"""
 
 __all__ = ['FTFilterUV', 'FTFilterUV_2Dthresh', 'PostFilterUV']
 
@@ -36,6 +32,11 @@ from pyctools.core.types import pt_complex, pt_float
 from .transformcore import transform_filter
 
 class FTFilterUV(Transformer):
+    """Filter modulated Cb,Cr in the Fourier Transform domain.
+
+    This is the clever bit of the Transform PAL decoder.
+
+    """
     inputs = ['input', 'threshold']
 
     def initialise(self):
@@ -109,29 +110,34 @@ class FTFilterUV(Transformer):
         return True
 
 
-def FTFilterUV_2Dthresh(config={}):
-    thresholds = numpy.array(
-        [[6, 6, 6, 6, 6],
-         [6, 6, 6, 6, 6],
-         [6, 6, 6, 6, 6],
-         [6, 6, 6, 6, 6],
-         [6, 6, 6, 6, 6],
-         [6, 6, 6, 6, 6],
-         [6, 6, 6, 6, 6],
-         [6, 6, 6, 6, 6],
-         [6, 6, 6, 6, 6]], dtype=numpy.float32) / numpy.float32(10.0)
-    out_frame = Frame()
-    out_frame.data = thresholds
-    out_frame.type = 'thresh'
-    audit = out_frame.metadata.get('audit')
-    audit += 'data = transform PAL decoder thresholds\n'
-    out_frame.metadata.set('audit', audit)
-    ft_filter = FTFilterUV(xtile=32, ytile=16, mode='2Dthresh', config=config)
-    ft_filter.threshold(out_frame)
-    return ft_filter
+class FTFilterUV_2Dthresh(FTFilterUV):
+    def __init__(self, config={}, **kwds):
+        super(FTFilterUV_2Dthresh, self).__init__(
+            xtile=32, ytile=16, mode='2Dthresh', config=config, **kwds)
+        threshold = Frame()
+        threshold.data = numpy.array(
+            [[6, 6, 6, 6, 6],
+             [6, 6, 6, 6, 6],
+             [6, 6, 6, 6, 6],
+             [6, 6, 6, 6, 6],
+             [6, 6, 6, 6, 6],
+             [6, 6, 6, 6, 6],
+             [6, 6, 6, 6, 6],
+             [6, 6, 6, 6, 6],
+             [6, 6, 6, 6, 6]], dtype=numpy.float32) / numpy.float32(10.0)
+        threshold.type = 'thresh'
+        audit = threshold.metadata.get('audit')
+        audit += 'data = transform PAL decoder thresholds\n'
+        threshold.metadata.set('audit', audit)
+        self.threshold(threshold)
 
 
-def PostFilterUV(config={}):
-    resize = Resize(config=config)
-    resize.filter(FilterGeneratorCore(x_ap=16, x_cut=25))
-    return resize
+class PostFilterUV(Resize):
+    """Chrominance post filter.
+
+    Low pass filter, cutting at 1/2 fsc.
+
+    """
+    def __init__(self, config={}, **kwds):
+        super(PostFilterUV, self).__init__(config=config, **kwds)
+        self.filter(FilterGeneratorCore(x_ap=16, x_cut=25))
