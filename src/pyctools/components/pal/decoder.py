@@ -26,6 +26,7 @@ from pyctools.core.frame import Frame
 from pyctools.components.arithmetic import Arithmetic
 from pyctools.components.colourspace.matrix import Matrix
 from pyctools.components.colourspace.yuvtorgb import YUVtoRGB
+from pyctools.components.interp.filtergenerator import FilterGeneratorCore
 from pyctools.components.interp.resize import Resize
 
 from .common import ModulateUV
@@ -55,10 +56,17 @@ class PostFilterY(Resize):
     """
     def __init__(self, config={}, **kwds):
         super(PostFilterY, self).__init__(config=config, **kwds)
+        base_filter = FilterGeneratorCore(x_ap=11, x_cut=45).data
+        base_filter[0, (base_filter.shape[1] // 2) % 2::2, 0] = 0
+        base_filter *= 1.6
+        base_filter[0, base_filter.shape[1] // 2, 0] = 0.2
+
         fil = Frame()
-        fil.data = numpy.array(
-            [27, -238, 47, 238, 876, 238, 47, -238, 27],
-            dtype=numpy.float32).reshape(1, -1, 1) / 1024.0
+        fil.data = base_filter
+        print(fil.data)
+##        fil.data = numpy.array(
+##            [27, -238, 47, 238, 876, 238, 47, -238, 27],
+##            dtype=numpy.float32).reshape(1, -1, 1) / 1024.0
         fil.type = 'fil'
         audit = fil.metadata.get('audit')
         audit += 'data = Y notch filter\n'
