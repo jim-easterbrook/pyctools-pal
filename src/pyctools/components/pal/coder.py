@@ -17,7 +17,7 @@
 #  along with this program.  If not, see
 #  <http://www.gnu.org/licenses/>.
 
-__all__ = ['Coder', 'PreFilterUV', 'UVtoC']
+__all__ = ['Coder', 'PostFilterPAL', 'PreFilterUV', 'UVtoC']
 
 import numpy
 
@@ -26,6 +26,7 @@ from pyctools.core.frame import Frame
 from pyctools.components.arithmetic import Arithmetic2
 from pyctools.components.colourspace.rgbtoyuv import RGBtoYUV
 from pyctools.components.colourspace.matrix import Matrix
+from pyctools.components.interp.filterdesign import FilterDesign
 from pyctools.components.interp.gaussianfilter import GaussianFilterCore
 from pyctools.components.interp.resize import Resize
 
@@ -35,10 +36,38 @@ class PreFilterUV(Resize):
     """Gaussian low-pass filter suitable for filtering chrominance
     before modulation.
 
+    According to the "White Book" the chrominance shall be attenuated by
+    <3 dB at 1.3 MHz and >20 dB at 4 MHz.
+
     """
     def __init__(self, config={}, **kwds):
         super(PreFilterUV, self).__init__(config=config, **kwds)
-        self.filter(GaussianFilterCore(x_sigma=1.659))
+        self.filter(GaussianFilterCore(x_sigma=1.49))
+
+
+class PostFilterPAL(Compound):
+    """5.5 MHz low pass filter.
+
+    According to the "White Book" the luminance shall be substantially
+    uniform from 0 to 5.5 MHz. It needs to be attenuated at 6 MHz to
+    leave space for the sound carrier.
+
+    """
+    def __init__(self, config={}, **kwds):
+        super(PostFilterPAL, self).__init__(
+            resize = Resize(),
+            fildes = FilterDesign(
+                frequency='0.0, 0.307, 0.317, 0.346, 0.356, 0.5',
+                gain='     1.0, 1.0,   1.0,   0.0,   0.0,   0.0',
+                weight='   1.0, 1.0,   0.0,   0.0,   1.0,   1.0',
+                aperture=17,
+                ),
+            linkages = {
+                ('self',   'input')    : [('resize', 'input')],
+                ('fildes', 'filter')   : [('resize', 'filter')],
+                ('resize', 'output')   : [('self',   'output')],
+                },
+            config=config, **kwds)
 
 
 class UVtoC(Matrix):
@@ -76,13 +105,15 @@ class Coder(Compound):
             matrix = UVtoC(),
             assemble = Arithmetic2(
                 func='(((data1 + data2) - pt_float(16.0)) * pt_float(140.0 / 219.0)) + pt_float(64.0)'),
+            postfilter = PostFilterPAL(),
             linkages = {
-                ('self',      'input')     : [('rgbyuv',    'input')],
-                ('rgbyuv',    'output_Y')  : [('assemble',  'input1')],
-                ('rgbyuv',    'output_UV') : [('prefilter', 'input')],
-                ('prefilter', 'output')    : [('modulator', 'input')],
-                ('modulator', 'output')    : [('matrix',    'input')],
-                ('matrix',    'output')    : [('assemble',  'input2')],
-                ('assemble',  'output')    : [('self',      'output')],
+                ('self',       'input')     : [('rgbyuv',     'input')],
+                ('rgbyuv',     'output_Y')  : [('assemble',   'input1')],
+                ('rgbyuv',     'output_UV') : [('prefilter',  'input')],
+                ('prefilter',  'output')    : [('modulator',  'input')],
+                ('modulator',  'output')    : [('matrix',     'input')],
+                ('matrix',     'output')    : [('assemble',   'input2')],
+                ('assemble',   'output')    : [('postfilter', 'input')],
+                ('postfilter', 'output')    : [('self',       'output')],
                 },
             config=config, **kwds)
