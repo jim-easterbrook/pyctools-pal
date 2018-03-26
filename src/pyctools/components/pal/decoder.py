@@ -27,6 +27,7 @@ from pyctools.components.arithmetic import Arithmetic
 from pyctools.components.colourspace.matrix import Matrix
 from pyctools.components.colourspace.yuvtorgb import YUVtoRGB
 from pyctools.components.interp.filtergenerator import FilterGeneratorCore
+from pyctools.components.interp.filterdesign import FilterDesign
 from pyctools.components.interp.resize import Resize
 
 from .common import ModulateUV
@@ -50,28 +51,26 @@ class CtoUV(Matrix):
         self.matrix(mat)
 
 
-class PostFilterY(Resize):
+class PostFilterY(Compound):
     """Poor quality PAL "notch" filter.
 
     """
     def __init__(self, config={}, **kwds):
-        super(PostFilterY, self).__init__(config=config, **kwds)
-        base_filter = FilterGeneratorCore(x_ap=11, x_cut=45).data
-        base_filter[0, (base_filter.shape[1] // 2) % 2::2, 0] = 0
-        base_filter *= 1.6
-        base_filter[0, base_filter.shape[1] // 2, 0] = 0.2
-
-        fil = Frame()
-        fil.data = base_filter
-        print(fil.data)
-##        fil.data = numpy.array(
-##            [27, -238, 47, 238, 876, 238, 47, -238, 27],
-##            dtype=numpy.float32).reshape(1, -1, 1) / 1024.0
-        fil.type = 'fil'
-        audit = fil.metadata.get('audit')
-        audit += 'data = Y notch filter\n'
-        fil.metadata.set('audit', audit)
-        self.filter(fil)
+        super(PostFilterY, self).__init__(
+            resize = Resize(),
+            fildes = FilterDesign(
+                frequency='0.0, 0.215, 0.22, 0.23, 0.25, 0.27, 0.28, 0.285, 0.5',
+                gain='     1.0, 1.0,   0.8,  0.0,  0.0,  0.0,  0.8,  1.0,   1.0',
+                weight='   0.6, 0.6,   0.6,  1.0,  1.0,  1.0,  0.3,  0.3,   0.3',
+                aperture=11,
+                ),
+            linkages = {
+                ('self',   'input')    : [('resize', 'input')],
+                ('fildes', 'filter')   : [('resize', 'filter')],
+                ('fildes', 'response') : [('self',   'response')],
+                ('resize', 'output')   : [('self',   'output')],
+                },
+            config=config, **kwds)
 
 
 class PostFilterUV(Resize):
