@@ -23,12 +23,13 @@ import math
 
 import numpy
 
+from pyctools.core.compound import Compound
 from pyctools.core.frame import Frame
-from pyctools.components.interp.filtergenerator import FilterGeneratorCore
+from pyctools.components.interp.filtergenerator import FilterGenerator
 from pyctools.components.interp.resize import Resize
 from pyctools.components.modulate import Modulate
 
-class To4Fsc(Resize):
+class To4Fsc(Compound):
     """Convert 13.5 MHz (Rec 601) sampled image to 4 fsc sampling.
 
     The conversion is not exact as 4 fsc is skewed by one pixel over a
@@ -38,11 +39,18 @@ class To4Fsc(Resize):
     def __init__(self, config={}, **kwds):
         # 4fsc = 922 active samples/line, Rec 601 = 702 active samples/line
         xup, xdown = 461, 351
-        super(To4Fsc, self).__init__(xup=xup, xdown=xdown, config=config, **kwds)
-        self.filter(FilterGeneratorCore(x_up=xup, x_down=xdown, x_ap=16))
+        super(To4Fsc, self).__init__(
+            resize = Resize(xup=xup, xdown=xdown),
+            filgen = FilterGenerator(xup=xup, xdown=xdown, xaperture=12),
+            linkages = {
+                ('self',   'input')  : [('resize', 'input')],
+                ('filgen', 'output') : [('resize', 'filter')],
+                ('resize', 'output') : [('self',   'output')],
+                },
+            config=config, **kwds)
 
 
-class From4Fsc(Resize):
+class From4Fsc(Compound):
     """Convert 4 fsc sampled image to 13.5 MHz (Rec 601) sampling.
 
     The conversion is not exact as 4 fsc is skewed by one pixel over a
@@ -52,8 +60,15 @@ class From4Fsc(Resize):
     def __init__(self, config={}, **kwds):
         # 4fsc = 922 active samples/line, Rec 601 = 702 active samples/line
         xup, xdown = 351, 461
-        super(From4Fsc, self).__init__(xup=xup, xdown=xdown, config=config, **kwds)
-        self.filter(FilterGeneratorCore(x_up=xup, x_down=xdown, x_ap=16))
+        super(From4Fsc, self).__init__(
+            resize = Resize(xup=xup, xdown=xdown),
+            filgen = FilterGenerator(xup=xup, xdown=xdown, xaperture=12),
+            linkages = {
+                ('self',   'input')  : [('resize', 'input')],
+                ('filgen', 'output') : [('resize', 'filter')],
+                ('resize', 'output') : [('self',   'output')],
+                },
+            config=config, **kwds)
 
 
 class ModulateUV(Modulate):

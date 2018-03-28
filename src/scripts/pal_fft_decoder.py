@@ -101,13 +101,13 @@ class Network(object):
     ('invwindow', 'output'): [('untile', 'input')],
     ('matrix', 'output'): [('demod', 'input')],
     ('postfilter', 'output'): [('yuvtorgb', 'input_UV')],
-    ('reinterlace', 'output'): [('matrix', 'input'), ('subtract', 'input2')],
-    ('resample', 'output'): [('audit', 'input'), ('display', 'input')],
-    ('setlevel', 'output'): [('deinterlace', 'input'), ('subtract', 'input1')],
+    ('reinterlace', 'output'): [('subtract', 'input2'), ('matrix', 'input')],
+    ('resample', 'output'): [('display', 'input'), ('audit', 'input')],
+    ('setlevel', 'output'): [('subtract', 'input1'), ('deinterlace', 'input')],
     ('subtract', 'output'): [('yuvtorgb', 'input_Y')],
     ('tile', 'output'): [('window', 'input')],
     ('untile', 'output'): [('reinterlace', 'input')],
-    ('win_func', 'output'): [('window', 'cell'), ('inv_win_func', 'input')],
+    ('win_func', 'output'): [('inv_win_func', 'input'), ('window', 'cell')],
     ('window', 'output'): [('fft', 'input')],
     ('yuvtorgb', 'output'): [('resample', 'input')]}
 

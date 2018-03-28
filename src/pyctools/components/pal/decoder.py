@@ -26,8 +26,8 @@ from pyctools.core.frame import Frame
 from pyctools.components.arithmetic import Arithmetic
 from pyctools.components.colourspace.matrix import Matrix
 from pyctools.components.colourspace.yuvtorgb import YUVtoRGB
-from pyctools.components.interp.filtergenerator import FilterGeneratorCore
 from pyctools.components.interp.filterdesign import FilterDesign
+from pyctools.components.interp.filtergenerator import FilterGenerator
 from pyctools.components.interp.resize import Resize
 
 from .common import ModulateUV
@@ -73,21 +73,20 @@ class PostFilterY(Compound):
             config=config, **kwds)
 
 
-class PostFilterUV(Resize):
+class PostFilterUV(Compound):
     """PAL decoder chrominance post filter.
 
     """
     def __init__(self, config={}, **kwds):
-        super(PostFilterUV, self).__init__(config=config, **kwds)
-        fil = Frame()
-        fil.data = numpy.array(
-            [1, 6, 19, 42, 71, 96, 106, 96, 71, 42, 19, 6, 1],
-            dtype=numpy.float32).reshape(1, -1, 1) / 576.0
-        fil.type = 'fil'
-        audit = fil.metadata.get('audit')
-        audit += 'data = UV low pass filter\n'
-        fil.metadata.set('audit', audit)
-        self.filter(fil)
+        super(PostFilterUV, self).__init__(
+            resize = Resize(),
+            filgen = FilterGenerator(xaperture=12, xcut=22),
+            linkages = {
+                ('self',   'input')  : [('resize', 'input')],
+                ('filgen', 'output') : [('resize', 'filter')],
+                ('resize', 'output') : [('self',   'output')],
+                },
+            config=config, **kwds)
 
 
 class Decoder(Compound):

@@ -17,16 +17,17 @@ class Network(object):
                  'config': '{}',
                  'pos': (110.0, 60.0)},
     'coder': {   'class': 'pyctools.components.pal.coder.Coder',
-                 'config': "{'assemble': {'func': '(((data1 + data2) - "
-                           'pt_float(16.0)) * pt_float(140.0 / 219.0)) + '
-                           "pt_float(64.0)'}, 'prefilter': {}, 'matrix': "
-                           "{}, 'rgbyuv': {'matrix': '601', "
-                           "'outframe_pool_len': 5}, 'modulator': {}, "
-                           "'postfilter': {'fildes': {'frequency': '0.0, "
-                           "0.307, 0.317, 0.346, 0.356, 0.5', 'gain': '     "
-                           "1.0, 1.0,   1.0,   0.0,   0.0,   0.0', "
-                           "'weight': '   1.0, 1.0,   0.0,   0.0,   1.0,   "
-                           "1.0', 'aperture': 17}, 'resize': {}}}",
+                 'config': "{'modulator': {}, 'assemble': {'func': "
+                           "'(((data1 + data2) - pt_float(16.0)) * "
+                           "pt_float(140.0 / 219.0)) + pt_float(64.0)'}, "
+                           "'rgbyuv': {'matrix': '601', "
+                           "'outframe_pool_len': 5}, 'matrix': {}, "
+                           "'prefilter': {}, 'postfilter': {'resize': {}, "
+                           "'fildes': {'frequency': '0.0, 0.307, 0.317, "
+                           "0.346, 0.356, 0.5', 'gain': '     1.0, 1.0,   "
+                           "1.0,   0.0,   0.0,   0.0', 'weight': '   1.0, "
+                           "1.0,   0.0,   0.0,   1.0,   1.0', 'aperture': "
+                           '17}}}',
                  'expanded': False,
                  'pos': (-30.0, -50.0)},
     'display': {   'class': 'pyctools.components.qt.qtdisplay.QtDisplay',
@@ -43,12 +44,15 @@ class Network(object):
                                 "'16bit': 1}",
                       'pos': (110.0, -160.0)},
     'resample': {   'class': 'pyctools.components.pal.common.To4Fsc',
-                    'config': "{'xup': 461, 'xdown': 351}",
+                    'config': "{'resize': {'xup': 461, 'xdown': 351}, "
+                              "'filgen': {'xup': 461, 'xdown': 351, "
+                              "'xaperture': 12}}",
+                    'expanded': False,
                     'pos': (-150.0, -50.0)}}
     linkages = \
-{   ('coder', 'output'): [   ('display', 'input'),
+{   ('coder', 'output'): [   ('filewriter', 'input'),
                              ('audit', 'input'),
-                             ('filewriter', 'input')],
+                             ('display', 'input')],
     ('filereader', 'output'): [('resample', 'input')],
     ('resample', 'output'): [('coder', 'input')]}
 

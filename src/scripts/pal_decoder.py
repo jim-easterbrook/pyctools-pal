@@ -16,11 +16,16 @@ class Network(object):
                  'config': '{}',
                  'pos': (420.0, 260.0)},
     'decoder': {   'class': 'pyctools.components.pal.decoder.Decoder',
-                   'config': "{'yuvrgb': {'matrix': '601'}, 'setlevel': "
-                             "{'func': '((data - pt_float(64)) * "
-                             "pt_float(219.0 / 140.0)) + pt_float(16)'}, "
-                             "'demod': {}, 'filterY': {}, 'filterUV': {}, "
-                             "'matrix': {}}",
+                   'config': "{'filterY': {'fildes': {'frequency': '0.0, "
+                             '0.215, 0.22, 0.23, 0.25, 0.27, 0.28, 0.285, '
+                             "0.5', 'gain': '     1.0, 1.0,   0.8,  0.0,  "
+                             "0.0,  0.0,  0.8,  1.0,   1.0', 'weight': '   "
+                             '0.6, 0.6,   0.6,  1.0,  1.0,  1.0,  0.3,  '
+                             "0.3,   0.3', 'aperture': 11}, 'resize': {}}, "
+                             "'setlevel': {'func': '((data - pt_float(64)) "
+                             "* pt_float(219.0 / 140.0)) + pt_float(16)'}, "
+                             "'yuvrgb': {'matrix': '601'}, 'matrix': {}, "
+                             "'demod': {}, 'filterUV': {}}",
                    'expanded': False,
                    'pos': (170.0, 150.0)},
     'display': {   'class': 'pyctools.components.qt.qtdisplay.QtDisplay',
@@ -38,7 +43,7 @@ class Network(object):
     linkages = \
 {   ('decoder', 'output'): [('resample', 'input')],
     ('filereader', 'output'): [('decoder', 'input')],
-    ('resample', 'output'): [('display', 'input'), ('audit', 'input')]}
+    ('resample', 'output'): [('audit', 'input'), ('display', 'input')]}
 
     def make(self):
         comps = {}
