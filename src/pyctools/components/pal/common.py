@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 #  Pyctools-pal - PAL coding and decoding with Pyctools.
 #  http://github.com/jim-easterbrook/pyctools-pal
-#  Copyright (C) 2014-18  Jim Easterbrook  jim@jim-easterbrook.me.uk
+#  Copyright (C) 2014-19 Jim Easterbrook  jim@jim-easterbrook.me.uk
 #
 #  This program is free software: you can redistribute it and/or
 #  modify it under the terms of the GNU General Public License as
@@ -24,6 +24,7 @@ import math
 import numpy
 
 from pyctools.core.compound import Compound
+from pyctools.core.config import ConfigEnum, ConfigInt
 from pyctools.core.frame import Frame
 from pyctools.components.interp.filtergenerator import FilterGenerator
 from pyctools.components.interp.resize import Resize
@@ -78,12 +79,18 @@ class ModulateUV(Modulate):
     modulation includes the V-axis switch.
 
     """
-    def __init__(self, config={}, **kwds):
-        super(ModulateUV, self).__init__(config=config, **kwds)
-        cell = numpy.empty([4, 8, 4, 2], dtype=numpy.float32)
+    def initialise(self):
+        super(ModulateUV, self).initialise()
+        self.config['sc_phase'] = ConfigInt(value=2, min_value=0, max_value=3)
+        self.config['VAS_phase'] = ConfigEnum(choices=('-1', '1'))
+
+    def on_set_config(self):
+        super(ModulateUV, self).on_set_config()
+        self.update_config()
         # phase is in "quarter cycles"
-        phase = 2.5     # integer part of start is arbitrary
-        v_axis_switch = 1
+        phase = float(self.config['sc_phase']) + 0.5
+        v_axis_switch = int(self.config['VAS_phase'])
+        cell = numpy.empty([4, 8, 4, 2], dtype=numpy.float32)
         for z in range(cell.shape[0]):
             for f in range(2):
                 for y in range(f, cell.shape[1], 2):
