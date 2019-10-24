@@ -16,16 +16,16 @@ class Network(object):
                  'config': '{}',
                  'pos': (420.0, 260.0)},
     'decoder': {   'class': 'pyctools.components.pal.decoder.Decoder',
-                   'config': "{'filterY': {'fildes': {'frequency': '0.0, "
-                             '0.215, 0.22, 0.23, 0.25, 0.27, 0.28, 0.285, '
-                             "0.5', 'gain': '     1.0, 1.0,   0.8,  0.0,  "
-                             "0.0,  0.0,  0.8,  1.0,   1.0', 'weight': '   "
-                             '0.6, 0.6,   0.6,  1.0,  1.0,  1.0,  0.3,  '
-                             "0.3,   0.3', 'aperture': 11}, 'resize': {}}, "
-                             "'setlevel': {'func': '((data - pt_float(64)) "
-                             "* pt_float(219.0 / 140.0)) + pt_float(16)'}, "
-                             "'yuvrgb': {'matrix': '601'}, 'matrix': {}, "
-                             "'demod': {}, 'filterUV': {}}",
+                   'config': "{'setlevel': {'func': '(data - pt_float(64)) * "
+                             "pt_float(255.0 / 140.0)'}, 'filterY': {'resize': "
+                             "{}, 'fildes': {'frequency': '0.0, 0.215, 0.22, "
+                             "0.23, 0.25, 0.27, 0.28, 0.285, 0.5', 'gain': "
+                             "'     1.0, 1.0,   0.8,  0.0,  0.0,  0.0,  0.8,  "
+                             "1.0,   1.0', 'weight': '   0.6, 0.6,   0.6,  "
+                             "1.0,  1.0,  1.0,  0.3,  0.3,   0.3', 'aperture': "
+                             "11}}, 'yuvrgb': {'matrix': '601'}, 'matrix': {}, "
+                             "'demod': {}, 'filterUV': {'resize': {}, "
+                             "'filgen': {'xaperture': 12, 'xcut': 22}}}",
                    'expanded': False,
                    'pos': (170.0, 150.0)},
     'display': {   'class': 'pyctools.components.qt.qtdisplay.QtDisplay',
@@ -34,16 +34,18 @@ class Network(object):
     'filereader': {   'class': 'pyctools.components.io.videofilereader.VideoFileReader',
                       'config': "{'path': "
                                 "'/home/jim/Documents/projects/pyctools-pal/coded_pal.avi', "
-                                "'looping': 'repeat', 'type': 'Y', '16bit': "
-                                '1}',
+                                "'looping': 'repeat', 'type': 'Y', '16bit': 1}",
                       'pos': (50.0, 150.0)},
     'resample': {   'class': 'pyctools.components.pal.common.From4Fsc',
-                    'config': "{'xup': 351, 'xdown': 461}",
+                    'config': "{'resize': {'xup': 351, 'xdown': 461}, "
+                              "'filgen': {'xup': 351, 'xdown': 461, "
+                              "'xaperture': 12}}",
+                    'expanded': False,
                     'pos': (290.0, 150.0)}}
     linkages = \
 {   ('decoder', 'output'): [('resample', 'input')],
     ('filereader', 'output'): [('decoder', 'input')],
-    ('resample', 'output'): [('audit', 'input'), ('display', 'input')]}
+    ('resample', 'output'): [('display', 'input'), ('audit', 'input')]}
 
     def make(self):
         comps = {}

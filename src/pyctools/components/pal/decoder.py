@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 #  Pyctools-pal - PAL coding and decoding with Pyctools.
 #  http://github.com/jim-easterbrook/pyctools-pal
-#  Copyright (C) 2014-18  Jim Easterbrook  jim@jim-easterbrook.me.uk
+#  Copyright (C) 2014-19  Jim Easterbrook  jim@jim-easterbrook.me.uk
 #
 #  This program is free software: you can redistribute it and/or
 #  modify it under the terms of the GNU General Public License as
@@ -100,7 +100,7 @@ class Decoder(Compound):
     def __init__(self, config={}, **kwds):
         super(Decoder, self).__init__(
             setlevel = Arithmetic(
-                func='((data - pt_float(64)) * pt_float(219.0 / 140.0)) + pt_float(16)'),
+                func='(data - pt_float(64)) * pt_float(255.0 / 140.0)'),
             filterY = PostFilterY(),
             yuvrgb = YUVtoRGB(matrix='601'),
             matrix = CtoUV(),

@@ -17,19 +17,17 @@ class Network(object):
                  'config': '{}',
                  'pos': (110.0, 60.0)},
     'coder': {   'class': 'pyctools.components.pal.coder.Coder',
-                 'config': "{'modulator': {}, 'assemble': {'func': "
-                           "'(((data1 + data2) - pt_float(16.0)) * "
-                           "pt_float(140.0 / 219.0)) + pt_float(64.0)'}, "
-                           "'rgbyuv': {'matrix': '601', "
-                           "'outframe_pool_len': 5}, 'matrix': {}, "
-                           "'prefilter': {}, 'postfilter': {'resize': {}, "
-                           "'fildes': {'frequency': '0.0, 0.307, 0.317, "
-                           "0.346, 0.356, 0.5', 'gain': '     1.0, 1.0,   "
-                           "1.0,   0.0,   0.0,   0.0', 'weight': '   1.0, "
-                           "1.0,   0.0,   0.0,   1.0,   1.0', 'aperture': "
-                           '17}}}',
+                 'config': "{'rgbyuv': {'matrix': '601', 'outframe_pool_len': "
+                           "5}, 'prefilter': {}, 'modulator': {}, 'matrix': "
+                           "{}, 'assemble': {'func': '((data1 + data2) * "
+                           "pt_float(140.0 / 255.0)) + pt_float(64.0)'}, "
+                           "'postfilter': {'resize': {}, 'fildes': "
+                           "{'frequency': '0.0, 0.307, 0.317, 0.346, 0.356, "
+                           "0.5', 'gain': '     1.0, 1.0,   1.0,   0.0,   "
+                           "0.0,   0.0', 'weight': '   1.0, 1.0,   0.0,   "
+                           "0.0,   1.0,   1.0', 'aperture': 17}}}",
                  'expanded': False,
-                 'pos': (-30.0, -50.0)},
+                 'pos': (-20.0, -50.0)},
     'display': {   'class': 'pyctools.components.qt.qtdisplay.QtDisplay',
                    'config': "{'framerate': 40}",
                    'pos': (110.0, -50.0)},
@@ -50,9 +48,9 @@ class Network(object):
                     'expanded': False,
                     'pos': (-150.0, -50.0)}}
     linkages = \
-{   ('coder', 'output'): [   ('filewriter', 'input'),
-                             ('audit', 'input'),
-                             ('display', 'input')],
+{   ('coder', 'output'): [   ('audit', 'input'),
+                             ('display', 'input'),
+                             ('filewriter', 'input')],
     ('filereader', 'output'): [('resample', 'input')],
     ('resample', 'output'): [('coder', 'input')]}
 

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 #  Pyctools-pal - PAL coding and decoding with Pyctools.
 #  http://github.com/jim-easterbrook/pyctools-pal
-#  Copyright (C) 2014-18  Jim Easterbrook  jim@jim-easterbrook.me.uk
+#  Copyright (C) 2014-19  Jim Easterbrook  jim@jim-easterbrook.me.uk
 #
 #  This program is free software: you can redistribute it and/or
 #  modify it under the terms of the GNU General Public License as
@@ -104,7 +104,7 @@ class Coder(Compound):
             modulator = ModulateUV(),
             matrix = UVtoC(),
             assemble = Arithmetic2(
-                func='(((data1 + data2) - pt_float(16.0)) * pt_float(140.0 / 219.0)) + pt_float(64.0)'),
+                func='((data1 + data2) * pt_float(140.0 / 255.0)) + pt_float(64.0)'),
             postfilter = PostFilterPAL(),
             linkages = {
                 ('self',       'input')     : [('rgbyuv',     'input')],
