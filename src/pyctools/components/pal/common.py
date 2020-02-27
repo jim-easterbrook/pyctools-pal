@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 #  Pyctools-pal - PAL coding and decoding with Pyctools.
 #  http://github.com/jim-easterbrook/pyctools-pal
-#  Copyright (C) 2014-19 Jim Easterbrook  jim@jim-easterbrook.me.uk
+#  Copyright (C) 2014-20 Jim Easterbrook  jim@jim-easterbrook.me.uk
 #
 #  This program is free software: you can redistribute it and/or
 #  modify it under the terms of the GNU General Public License as
@@ -82,7 +82,7 @@ class ModulateUV(Modulate):
     def initialise(self):
         super(ModulateUV, self).initialise()
         self.config['sc_phase'] = ConfigInt(value=2, min_value=0, max_value=3)
-        self.config['VAS_phase'] = ConfigEnum(choices=('-1', '1'))
+        self.config['VAS_phase'] = ConfigEnum(choices=('-1', '1'), value='1')
 
     def on_set_config(self):
         super(ModulateUV, self).on_set_config()
