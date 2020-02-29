@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 #  Pyctools-pal - PAL coding and decoding with Pyctools.
 #  http://github.com/jim-easterbrook/pyctools-pal
-#  Copyright (C) 2014-19  Jim Easterbrook  jim@jim-easterbrook.me.uk
+#  Copyright (C) 2014-20  Jim Easterbrook  jim@jim-easterbrook.me.uk
 #
 #  This program is free software: you can redistribute it and/or
 #  modify it under the terms of the GNU General Public License as
@@ -32,6 +32,7 @@ from pyctools.components.interp.resize import Resize
 
 from .common import ModulateUV
 
+
 class PreFilterUV(Resize):
     """Gaussian low-pass filter suitable for filtering chrominance
     before modulation.
@@ -42,7 +43,7 @@ class PreFilterUV(Resize):
     """
     def __init__(self, config={}, **kwds):
         super(PreFilterUV, self).__init__(config=config, **kwds)
-        self.filter(GaussianFilterCore(x_sigma=1.49))
+        self.filter(GaussianFilterCore(x_sigma=1.659))
 
 
 class PostFilterPAL(Compound):
@@ -60,12 +61,13 @@ class PostFilterPAL(Compound):
                 frequency='0.0, 0.307, 0.317, 0.346, 0.356, 0.5',
                 gain='     1.0, 1.0,   1.0,   0.0,   0.0,   0.0',
                 weight='   1.0, 1.0,   0.0,   0.0,   1.0,   1.0',
-                aperture=17,
+                aperture=61,
                 ),
             linkages = {
                 ('self',   'input')    : [('resize', 'input')],
                 ('fildes', 'filter')   : [('resize', 'filter')],
                 ('resize', 'output')   : [('self',   'output')],
+                ('fildes', 'response') : [('self',   'response')],
                 },
             config=config, **kwds)
 
@@ -115,5 +117,7 @@ class Coder(Compound):
                 ('matrix',     'output')    : [('assemble',   'input2')],
                 ('assemble',   'output')    : [('postfilter', 'input')],
                 ('postfilter', 'output')    : [('self',       'output')],
+                ('prefilter',  'filter')    : [('self',       'pre_filt')],
+                ('postfilter', 'response')  : [('self',       'post_resp')],
                 },
             config=config, **kwds)

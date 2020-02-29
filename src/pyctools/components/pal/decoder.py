@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 #  Pyctools-pal - PAL coding and decoding with Pyctools.
 #  http://github.com/jim-easterbrook/pyctools-pal
-#  Copyright (C) 2014-19  Jim Easterbrook  jim@jim-easterbrook.me.uk
+#  Copyright (C) 2014-20  Jim Easterbrook  jim@jim-easterbrook.me.uk
 #
 #  This program is free software: you can redistribute it and/or
 #  modify it under the terms of the GNU General Public License as
@@ -31,6 +31,7 @@ from pyctools.components.interp.filtergenerator import FilterGenerator
 from pyctools.components.interp.resize import Resize
 
 from .common import ModulateUV
+
 
 class CtoUV(Matrix):
     """Matrix chroma to modulated Cb,Cr.
@@ -85,6 +86,7 @@ class PostFilterUV(Compound):
                 ('self',   'input')  : [('resize', 'input')],
                 ('filgen', 'output') : [('resize', 'filter')],
                 ('resize', 'output') : [('self',   'output')],
+                ('resize', 'filter') : [('self',   'filter')],
                 },
             config=config, **kwds)
 
@@ -107,13 +109,15 @@ class Decoder(Compound):
             demod = ModulateUV(),
             filterUV = PostFilterUV(),
             linkages = {
-                ('self',     'input')   : [('setlevel', 'input')],
-                ('setlevel', 'output')  : [('filterY',  'input'),
-                                           ('matrix',   'input')],
-                ('filterY',  'output')  : [('yuvrgb',   'input_Y')],
-                ('matrix',   'output')  : [('demod',    'input')],
-                ('demod',    'output')  : [('filterUV', 'input')],
-                ('filterUV', 'output')  : [('yuvrgb',   'input_UV')],
-                ('yuvrgb',   'output')  : [('self',     'output')],
+                ('self',     'input')    : [('setlevel', 'input')],
+                ('setlevel', 'output')   : [('filterY',  'input'),
+                                            ('matrix',   'input')],
+                ('filterY',  'output')   : [('yuvrgb',   'input_Y')],
+                ('matrix',   'output')   : [('demod',    'input')],
+                ('demod',    'output')   : [('filterUV', 'input')],
+                ('filterUV', 'output')   : [('yuvrgb',   'input_UV')],
+                ('yuvrgb',   'output')   : [('self',     'output')],
+                ('filterY',  'response') : [('self',     'Y_resp')],
+                ('filterUV', 'filter')   : [('self',     'UV_filt')],
                 },
             config=config, **kwds)
