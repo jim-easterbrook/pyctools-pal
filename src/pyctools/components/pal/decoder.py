@@ -60,16 +60,16 @@ class PostFilterY(Compound):
         super(PostFilterY, self).__init__(
             resize = Resize(),
             fildes = FilterDesign(
-                frequency='0.0, 0.215, 0.22, 0.23, 0.25, 0.27, 0.28, 0.285, 0.5',
-                gain='     1.0, 1.0,   0.8,  0.0,  0.0,  0.0,  0.8,  1.0,   1.0',
-                weight='   0.6, 0.6,   0.6,  1.0,  1.0,  1.0,  0.3,  0.3,   0.3',
-                aperture=11,
+                frequency='0.0,  0.215, 0.22, 0.23, 0.25, 0.27, 0.28,  0.285, 0.5',
+                gain=     '1.0,  1.0,   0.8,  0.0,  0.0,  0.0,  0.8,   1.0,   1.0',
+                weight=   '0.01, 0.01,  0.01, 0.1,  1.0,  0.1,  0.005, 0.005, 0.01',
+                aperture=13,
                 ),
             linkages = {
                 ('self',   'input')    : [('resize', 'input')],
                 ('fildes', 'filter')   : [('resize', 'filter')],
-                ('fildes', 'response') : [('self',   'response')],
                 ('resize', 'output')   : [('self',   'output')],
+                ('fildes', 'response') : [('self',   'response')],
                 },
             config=config, **kwds)
 
