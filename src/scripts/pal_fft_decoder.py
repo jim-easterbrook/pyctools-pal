@@ -11,6 +11,7 @@ from pyctools.core.compound import Compound
 import pyctools.components.arithmetic
 import pyctools.components.colourspace.yuvtorgb
 import pyctools.components.deinterlace.halfsize
+import pyctools.components.deinterlace.weston3field
 import pyctools.components.fft.fft
 import pyctools.components.fft.tile
 import pyctools.components.fft.window
@@ -27,6 +28,9 @@ class Network(object):
 {   'audit': {   'class': 'pyctools.components.io.dumpmetadata.DumpMetadata',
                  'config': '{}',
                  'pos': (2540.0, -40.0)},
+    'deint': {   'class': 'pyctools.components.deinterlace.weston3field.Weston3Field',
+                 'config': '{}',
+                 'pos': (2540.0, -150.0)},
     'deinterlace': {   'class': 'pyctools.components.deinterlace.halfsize.HalfSize',
                        'config': '{}',
                        'pos': (350.0, -40.0)},
@@ -35,7 +39,7 @@ class Network(object):
                  'pos': (2040.0, -40.0)},
     'display': {   'class': 'pyctools.components.qt.qtdisplay.QtDisplay',
                    'config': "{'stats': True}",
-                   'pos': (2540.0, -150.0)},
+                   'pos': (2660.0, -150.0)},
     'fftX': {   'class': 'pyctools.components.fft.fft.FFT',
                 'config': "{'xtile': 32, 'ytile': 1, 'submean': True}",
                 'pos': (110.0, -40.0)},
@@ -127,7 +131,8 @@ class Network(object):
                     'config': "{'matrix': '601'}",
                     'pos': (2290.0, -150.0)}}
     linkages = \
-{   ('deinterlace', 'output'): [('tileY', 'input')],
+{   ('deint', 'output'): [('display', 'input')],
+    ('deinterlace', 'output'): [('tileY', 'input')],
     ('demod', 'output'): [('postfilter', 'input')],
     ('fftX', 'output'): [('subset', 'input')],
     ('fftY', 'output'): [('filterUV', 'input')],
@@ -143,18 +148,18 @@ class Network(object):
     ('pad', 'output'): [('ifftX', 'input')],
     ('postfilter', 'output'): [('yuvtorgb', 'input_UV')],
     ('reinterlace', 'output'): [('pad', 'input')],
-    ('resample', 'output'): [('audit', 'input'), ('display', 'input')],
-    ('setlevel', 'output'): [('subtract', 'input1'), ('tileX', 'input')],
+    ('resample', 'output'): [('deint', 'input'), ('audit', 'input')],
+    ('setlevel', 'output'): [('tileX', 'input'), ('subtract', 'input1')],
     ('subset', 'output'): [('deinterlace', 'input')],
     ('subtract', 'output'): [('yuvtorgb', 'input_Y')],
     ('tileX', 'output'): [('windowX', 'input')],
     ('tileY', 'output'): [('windowY', 'input')],
-    ('untileX', 'output'): [('subtract', 'input2'), ('matrix', 'input')],
+    ('untileX', 'output'): [('matrix', 'input'), ('subtract', 'input2')],
     ('untileY', 'output'): [('reinterlace', 'input')],
     ('windowX', 'output'): [('fftX', 'input')],
     ('windowY', 'output'): [('fftY', 'input')],
-    ('winfuncX', 'output'): [('invwinfuncX', 'input'), ('windowX', 'cell')],
-    ('winfuncY', 'output'): [('windowY', 'cell'), ('invwinfuncY', 'input')],
+    ('winfuncX', 'output'): [('windowX', 'cell'), ('invwinfuncX', 'input')],
+    ('winfuncY', 'output'): [('invwinfuncY', 'input'), ('windowY', 'cell')],
     ('yuvtorgb', 'output'): [('resample', 'input')]}
 
     def make(self):
