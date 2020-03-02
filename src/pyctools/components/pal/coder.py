@@ -101,7 +101,7 @@ class Coder(Compound):
     """
     def __init__(self, config={}, **kwds):
         super(Coder, self).__init__(
-            rgbyuv = RGBtoYUV(outframe_pool_len=5, matrix='601'),
+            rgbyuv = RGBtoYUV(outframe_pool_len=5, matrix='601', audit='Y'),
             prefilter = PreFilterUV(),
             modulator = ModulateUV(),
             matrix = UVtoC(),
