@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 #  Pyctools-pal - PAL coding and decoding with Pyctools.
 #  http://github.com/jim-easterbrook/pyctools-pal
-#  Copyright (C) 2014-18  Jim Easterbrook  jim@jim-easterbrook.me.uk
+#  Copyright (C) 2014-20  Jim Easterbrook  jim@jim-easterbrook.me.uk
 #
 #  This program is free software: you can redistribute it and/or
 #  modify it under the terms of the GNU General Public License as
@@ -17,7 +17,8 @@
 #  along with this program.  If not, see
 #  <http://www.gnu.org/licenses/>.
 
-__all__ = ['FTFilterUV', 'FTFilterUV_2Dthresh', 'PostFilterUV']
+__all__ = ['FTFilterUV', 'FTFilterUV_2Dthresh',
+           'HorizontalSubset', 'PostFilterUV']
 
 import math
 
@@ -26,7 +27,7 @@ import numpy
 from pyctools.components.interp.filtergenerator import FilterGeneratorCore
 from pyctools.components.interp.resize import Resize
 from pyctools.core.base import Transformer
-from pyctools.core.config import ConfigEnum, ConfigFloat, ConfigInt
+from pyctools.core.config import ConfigBool, ConfigEnum, ConfigFloat, ConfigInt
 from pyctools.core.frame import Frame
 from pyctools.core.types import pt_complex, pt_float
 from .transformcore import transform_filter
@@ -94,10 +95,12 @@ class FTFilterUV(Transformer):
         in_data = in_frame.as_numpy(dtype=pt_complex)
         x_len = in_data.shape[1]
         y_len = in_data.shape[0]
-        x_blk = x_len // x_tile
+        x0 = x_tile // 8
+        x1 = 1 + ((x_tile * 3) // 8)
+        x_blk = x_len // (x1 - x0)
         y_blk = y_len // y_tile
-        in_data = in_data.reshape(y_blk, y_tile, x_blk, x_tile)
-        out_data = numpy.zeros(in_data.shape, dtype=pt_complex)
+        in_data = in_data.reshape(y_blk, y_tile, x_blk, x1 - x0)
+        out_data = numpy.empty(in_data.shape, dtype=pt_complex)
         transform_filter(out_data, in_data,
                          ord(mode[0]), slope, threshold, self.threshold_values)
         out_data = out_data.reshape(y_len, x_len, 1)
@@ -131,6 +134,44 @@ class FTFilterUV_2Dthresh(FTFilterUV):
         audit += 'data = transform PAL decoder thresholds\n'
         threshold.metadata.set('audit', audit)
         self.threshold(threshold)
+
+
+class HorizontalSubset(Transformer):
+    """Discard horizontal frequencies that aren't used in the PAL
+    filter.
+
+    """
+
+    def initialise(self):
+        self.config['xtile'] = ConfigInt(min_value=8)
+        self.config['inverse'] = ConfigBool()
+
+    def transform(self, in_frame, out_frame):
+        self.update_config()
+        x_tile = self.config['xtile']
+        inverse = self.config['inverse']
+        in_data = in_frame.as_numpy()
+        x_len = in_data.shape[1]
+        y_len = in_data.shape[0]
+        x0 = x_tile // 8
+        x1 = 1 + ((x_tile * 3) // 8)
+        if inverse:
+            x_blk = x_len // (x1 - x0)
+            in_data = in_data.reshape(y_len, x_blk, x1 - x0)
+            out_data = numpy.zeros((y_len, x_blk, x_tile), dtype=in_data.dtype)
+            out_data[::, ::, x0:x1] = in_data * pt_float(2.0)
+            out_data = out_data.reshape(y_len, x_blk * x_tile, 1)
+        else:
+            x_blk = x_len // x_tile
+            in_data = in_data.reshape(y_len, x_blk, x_tile)
+            out_data = in_data[::, ::, x0:x1]
+            out_data = out_data.reshape(y_len, x_blk * (x1 - x0), 1)
+        out_frame.data = out_data
+        audit = out_frame.metadata.get('audit')
+        audit += 'data = HorizontalSubset(data)\n'
+        audit += self.config.audit_string()
+        out_frame.metadata.set('audit', audit)
+        return True
 
 
 class PostFilterUV(Resize):
