@@ -46,7 +46,6 @@ class FTFilterUV(Transformer):
         self.config['ytile'] = ConfigInt(min_value=8)
         self.config['mode'] = ConfigEnum(choices=('limit', 'thresh', '2Dthresh'))
         self.config['threshold'] = ConfigFloat(min_value=0.0)
-        self.config['slope'] = ConfigFloat()
         self.threshold_frame = None
         self.threshold_values = numpy.zeros((1, 1), dtype=pt_float)
 
@@ -89,7 +88,6 @@ class FTFilterUV(Transformer):
         y_tile = self.config['ytile']
         mode = self.config['mode']
         threshold = self.config['threshold']
-        slope = self.config['slope']
         if mode == '2Dthresh' and not self.get_threshold():
             return False
         in_data = in_frame.as_numpy(dtype=pt_complex)
@@ -102,13 +100,12 @@ class FTFilterUV(Transformer):
         in_data = in_data.reshape(y_blk, y_tile, x_blk, x1 - x0)
         out_data = numpy.empty(in_data.shape, dtype=pt_complex)
         transform_filter(out_data, in_data,
-                         ord(mode[0]), slope, threshold, self.threshold_values)
+                         ord(mode[0]), threshold, self.threshold_values)
         out_data = out_data.reshape(y_len, x_len, 1)
         audit = out_frame.metadata.get('audit')
         audit += 'data = TransformFilter(data)\n'
         audit += '    tile size: %d x %d\n' % (y_tile, x_tile)
-        audit += '    mode: %s, threshold: %g, slope: %g\n' % (
-            mode, threshold, slope)
+        audit += '    mode: %s, threshold: %g\n' % (mode, threshold)
         out_frame.metadata.set('audit', audit)
         out_frame.data = out_data
         return True

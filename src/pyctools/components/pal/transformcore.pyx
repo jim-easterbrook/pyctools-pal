@@ -24,23 +24,20 @@ ctypedef numpy.float32_t FLOAT_t
 
 def transform_filter(numpy.ndarray[CMPLX_t, ndim=4] out_data,
                      numpy.ndarray[CMPLX_t, ndim=4] in_data,
-                     char mode, FLOAT_t slope, FLOAT_t threshold,
+                     char mode, FLOAT_t threshold,
                      numpy.ndarray[FLOAT_t, ndim=2] threshold_values):
     cdef:
-        unsigned int x_blk, y_blk, x_tile, y_tile, x_off, x_sub
+        unsigned int x_blk, y_blk, y_tile, x_sub
         unsigned int i, j, x, y, x_conj, y_conj, x_ref, y_ref
         CMPLX_t in_val, ref_val
-        FLOAT_t adj, m_in, m_ref
+        FLOAT_t m_in, m_ref
     y_blk = out_data.shape[0]
     y_tile = out_data.shape[1]
     x_blk = out_data.shape[2]
-    x_tile = (out_data.shape[3] - 1) * 4
     x_sub = out_data.shape[3]
-    x_off = x_tile // 8
     for y in range(y_tile):
         y_ref = ((y_tile // 2) + y_tile - y) % y_tile
         for x in range(1 + (x_sub // 2)):
-            adj = 1.0 - (slope * (x + x_off - (x_tile // 4)) / x_tile)
             x_ref = (x_sub - 1) - x
             if x == x_ref and y == y_ref:
                 # at Fsc, so no attenuation
@@ -53,8 +50,8 @@ def transform_filter(numpy.ndarray[CMPLX_t, ndim=4] out_data,
                     for i in range(x_blk):
                         in_val = in_data[j, y, i, x]
                         ref_val = in_data[j, y_ref, i, x_ref]
-                        m_in = abs(in_val) * adj
-                        m_ref = abs(ref_val) / adj
+                        m_in = abs(in_val)
+                        m_ref = abs(ref_val)
                         if m_in < m_ref:
                             out_data[j, y, i, x] = in_val
                             out_data[j, y_ref, i, x_ref] = ref_val * m_in / m_ref
@@ -67,8 +64,8 @@ def transform_filter(numpy.ndarray[CMPLX_t, ndim=4] out_data,
                     for i in range(x_blk):
                         in_val = in_data[j, y, i, x]
                         ref_val = in_data[j, y_ref, i, x_ref]
-                        m_in = abs(in_val) * adj
-                        m_ref = abs(ref_val) / adj
+                        m_in = abs(in_val)
+                        m_ref = abs(ref_val)
                         if (m_in > m_ref * threshold_values[y, x] and
                                 m_ref > m_in * threshold_values[y, x]):
                             out_data[j, y, i, x] = in_val
@@ -82,8 +79,8 @@ def transform_filter(numpy.ndarray[CMPLX_t, ndim=4] out_data,
                     for i in range(x_blk):
                         in_val = in_data[j, y, i, x]
                         ref_val = in_data[j, y_ref, i, x_ref]
-                        m_in = abs(in_val) * adj
-                        m_ref = abs(ref_val) / adj
+                        m_in = abs(in_val)
+                        m_ref = abs(ref_val)
                         if (m_in > m_ref * threshold and
                                 m_ref > m_in * threshold):
                             out_data[j, y, i, x] = in_val
