@@ -9,8 +9,8 @@ from PyQt5 import QtCore, QtWidgets
 
 from pyctools.core.compound import Compound
 import pyctools.components.io.dumpmetadata
+import pyctools.components.io.rawfilewriter
 import pyctools.components.io.videofilereader
-import pyctools.components.io.videofilewriter
 import pyctools.components.pal.coder
 import pyctools.components.pal.common
 import pyctools.components.qt.qtdisplay
@@ -40,12 +40,11 @@ class Network(object):
                       'config': "{'path': "
                                 "'/home/jim/Videos/test_seqs/mobcal.avi', "
                                 "'noaudit': True}",
-                      'pos': (-270.0, -50.0)},
-    'filewriter': {   'class': 'pyctools.components.io.videofilewriter.VideoFileWriter',
+                      'pos': (-280.0, -50.0)},
+    'filewriter': {   'class': 'pyctools.components.io.rawfilewriter.RawFileWriter',
                       'config': "{'path': "
-                                "'/home/jim/Documents/projects/pyctools/pyctools-pal/coded_pal.avi', "
-                                "'encoder': '-c:v ffv1 -pix_fmt gray16le', "
-                                "'16bit': True}",
+                                "'/home/jim/Documents/projects/pyctools/pyctools-pal/coded_pal.pal', "
+                                "'fourcc': 'Y16'}",
                       'pos': (110.0, -160.0)},
     'resample': {   'class': 'pyctools.components.pal.common.To4Fsc',
                     'config': "{'resize': {'xup': 461, 'xdown': 351}, "
@@ -54,9 +53,9 @@ class Network(object):
                     'expanded': False,
                     'pos': (-150.0, -50.0)}}
     linkages = \
-{   ('coder', 'output'): [   ('audit', 'input'),
+{   ('coder', 'output'): [   ('filewriter', 'input_Y_RGB'),
                              ('display', 'input'),
-                             ('filewriter', 'input')],
+                             ('audit', 'input')],
     ('filereader', 'output'): [('resample', 'input')],
     ('resample', 'output'): [('coder', 'input')]}
 

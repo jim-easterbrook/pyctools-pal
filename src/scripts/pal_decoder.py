@@ -8,8 +8,9 @@ import sys
 from PyQt5 import QtCore, QtWidgets
 
 from pyctools.core.compound import Compound
+import pyctools.components.deinterlace.weston3field
 import pyctools.components.io.dumpmetadata
-import pyctools.components.io.videofilereader
+import pyctools.components.io.rawfilereader
 import pyctools.components.pal.common
 import pyctools.components.pal.decoder
 import pyctools.components.qt.qtdisplay
@@ -32,14 +33,18 @@ class Network(object):
                              "'filgen': {'xaperture': 12, 'xcut': 22}}}",
                    'expanded': False,
                    'pos': (160.0, 150.0)},
+    'deint': {   'class': 'pyctools.components.deinterlace.weston3field.Weston3Field',
+                 'config': '{}',
+                 'pos': (420.0, 150.0)},
     'display': {   'class': 'pyctools.components.qt.qtdisplay.QtDisplay',
-                   'config': "{'stats': True}",
-                   'pos': (420.0, 150.0)},
-    'filereader': {   'class': 'pyctools.components.io.videofilereader.VideoFileReader',
+                   'config': "{'title': 'Simple PAL', 'framerate': 50, "
+                             "'stats': True}",
+                   'pos': (550.0, 150.0)},
+    'filereader': {   'class': 'pyctools.components.io.rawfilereader.RawFileReader',
                       'config': "{'path': "
-                                "'/home/jim/Documents/projects/pyctools/pyctools-pal/coded_pal.avi', "
-                                "'looping': 'repeat', 'type': 'Y', '16bit': "
-                                "True, 'noaudit': True, 'zperiod': 4}",
+                                "'/home/jim/Documents/projects/pyctools/pyctools-pal/coded_pal.pal', "
+                                "'looping': 'repeat', 'noaudit': True, "
+                                "'zperiod': 4}",
                       'pos': (30.0, 150.0)},
     'resample': {   'class': 'pyctools.components.pal.common.From4Fsc',
                     'config': "{'resize': {'xup': 351, 'xdown': 461}, "
@@ -49,8 +54,9 @@ class Network(object):
                     'pos': (290.0, 150.0)}}
     linkages = \
 {   ('decoder', 'output'): [('resample', 'input')],
-    ('filereader', 'output'): [('decoder', 'input')],
-    ('resample', 'output'): [('audit', 'input'), ('display', 'input')]}
+    ('deint', 'output'): [('display', 'input')],
+    ('filereader', 'output_Y_RGB'): [('decoder', 'input')],
+    ('resample', 'output'): [('audit', 'input'), ('deint', 'input')]}
 
     def make(self):
         comps = {}
