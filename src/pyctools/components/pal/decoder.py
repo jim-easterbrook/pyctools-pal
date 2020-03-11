@@ -28,6 +28,7 @@ from pyctools.components.colourspace.matrix import Matrix
 from pyctools.components.colourspace.yuvtorgb import YUVtoRGB
 from pyctools.components.interp.filterdesign import FilterDesign
 from pyctools.components.interp.filtergenerator import FilterGenerator
+from pyctools.components.interp.imageresizer import ImageResizerX
 from pyctools.components.interp.resize import Resize
 
 from .common import ModulateUV
@@ -57,6 +58,9 @@ class PostFilterY(Compound):
 
     """
     def __init__(self, config={}, **kwds):
+        cfg = {}
+        cfg.update(kwds)
+        cfg.update(config)
         super(PostFilterY, self).__init__(
             resize = Resize(),
             fildes = FilterDesign(
@@ -65,30 +69,32 @@ class PostFilterY(Compound):
                 weight=   '0.01, 0.01,  0.01, 0.1,  1.0,  0.1,  0.005, 0.005, 0.01',
                 aperture=13,
                 ),
+            config = cfg,
+            config_map = {
+                'frequency'        : ('fildes.frequency',),
+                'gain'             : ('fildes.gain',),
+                'weight'           : ('fildes.weight',),
+                'aperture'         : ('fildes.aperture',),
+                'outframe_pool_len': ('resize.outframe_pool_len',),
+                },
             linkages = {
                 ('self',   'input')    : [('resize', 'input')],
                 ('fildes', 'filter')   : [('resize', 'filter')],
                 ('resize', 'output')   : [('self',   'output')],
                 ('fildes', 'response') : [('self',   'response')],
-                },
-            config=config, **kwds)
+                }
+            )
 
 
-class PostFilterUV(Compound):
+class PostFilterUV(ImageResizerX):
     """PAL decoder chrominance post filter.
 
     """
     def __init__(self, config={}, **kwds):
-        super(PostFilterUV, self).__init__(
-            resize = Resize(),
-            filgen = FilterGenerator(xaperture=12, xcut=22),
-            linkages = {
-                ('self',   'input')  : [('resize', 'input')],
-                ('filgen', 'output') : [('resize', 'filter')],
-                ('resize', 'output') : [('self',   'output')],
-                ('resize', 'filter') : [('self',   'filter')],
-                },
-            config=config, **kwds)
+        cfg = {'aperture': 12, 'filgen.xcut': 22}
+        cfg.update(kwds)
+        cfg.update(config)
+        super(PostFilterUV, self).__init__(config=cfg, **kwds)
 
 
 class Decoder(Compound):
@@ -100,6 +106,9 @@ class Decoder(Compound):
 
     """
     def __init__(self, config={}, **kwds):
+        cfg = {}
+        cfg.update(kwds)
+        cfg.update(config)
         super(Decoder, self).__init__(
             setlevel = Arithmetic(
                 func='(data - pt_float(64)) * pt_float(255.0 / 140.0)'),
@@ -108,6 +117,18 @@ class Decoder(Compound):
             matrix = CtoUV(),
             demod = ModulateUV(),
             filterUV = PostFilterUV(),
+            config = cfg,
+            config_map = {
+                'sc_phase'         : ('demod.sc_phase',),
+                'VAS_phase'        : ('demod.VAS_phase',),
+                'Yfrequency'       : ('filterY.frequency',),
+                'Ygain'            : ('filterY.gain',),
+                'Yweight'          : ('filterY.weight',),
+                'Yaperture'        : ('filterY.aperture',),
+                'UVcut'            : ('filterUV.filgen.xcut',),
+                'UVaperture'       : ('filterUV.aperture',),
+                'outframe_pool_len': ('yuvrgb.outframe_pool_len',),
+                },
             linkages = {
                 ('self',     'input')    : [('setlevel', 'input')],
                 ('setlevel', 'output')   : [('filterY',  'input'),
@@ -119,5 +140,5 @@ class Decoder(Compound):
                 ('yuvrgb',   'output')   : [('self',     'output')],
                 ('filterY',  'response') : [('self',     'Y_resp')],
                 ('filterUV', 'filter')   : [('self',     'UV_filt')],
-                },
-            config=config, **kwds)
+                }
+            )

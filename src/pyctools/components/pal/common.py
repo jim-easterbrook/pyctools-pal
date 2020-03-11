@@ -26,11 +26,11 @@ import numpy
 from pyctools.core.compound import Compound
 from pyctools.core.config import ConfigEnum, ConfigInt
 from pyctools.core.frame import Frame
-from pyctools.components.interp.filtergenerator import FilterGenerator
-from pyctools.components.interp.resize import Resize
+from pyctools.components.interp.imageresizer import ImageResizerX
 from pyctools.components.modulate import Modulate
 
-class To4Fsc(Compound):
+
+class To4Fsc(ImageResizerX):
     """Convert 13.5 MHz (Rec 601) sampled image to 4 fsc sampling.
 
     The conversion is not exact as 4 fsc is skewed by one pixel over a
@@ -39,19 +39,13 @@ class To4Fsc(Compound):
     """
     def __init__(self, config={}, **kwds):
         # 4fsc = 922 active samples/line, Rec 601 = 702 active samples/line
-        xup, xdown = 461, 351
-        super(To4Fsc, self).__init__(
-            resize = Resize(xup=xup, xdown=xdown),
-            filgen = FilterGenerator(xup=xup, xdown=xdown, xaperture=12),
-            linkages = {
-                ('self',   'input')  : [('resize', 'input')],
-                ('filgen', 'output') : [('resize', 'filter')],
-                ('resize', 'output') : [('self',   'output')],
-                },
-            config=config, **kwds)
+        cfg = {'up': 461, 'down': 351, 'aperture': 12}
+        cfg.update(kwds)
+        cfg.update(config)
+        super(To4Fsc, self).__init__(config=config, **kwds)
 
 
-class From4Fsc(Compound):
+class From4Fsc(ImageResizerX):
     """Convert 4 fsc sampled image to 13.5 MHz (Rec 601) sampling.
 
     The conversion is not exact as 4 fsc is skewed by one pixel over a
@@ -60,16 +54,10 @@ class From4Fsc(Compound):
     """
     def __init__(self, config={}, **kwds):
         # 4fsc = 922 active samples/line, Rec 601 = 702 active samples/line
-        xup, xdown = 351, 461
-        super(From4Fsc, self).__init__(
-            resize = Resize(xup=xup, xdown=xdown),
-            filgen = FilterGenerator(xup=xup, xdown=xdown, xaperture=12),
-            linkages = {
-                ('self',   'input')  : [('resize', 'input')],
-                ('filgen', 'output') : [('resize', 'filter')],
-                ('resize', 'output') : [('self',   'output')],
-                },
-            config=config, **kwds)
+        cfg = {'up': 351, 'down': 461, 'aperture': 12}
+        cfg.update(kwds)
+        cfg.update(config)
+        super(From4Fsc, self).__init__(config=config, **kwds)
 
 
 class ModulateUV(Modulate):
@@ -81,15 +69,16 @@ class ModulateUV(Modulate):
     """
     def initialise(self):
         super(ModulateUV, self).initialise()
-        self.config['sc_phase'] = ConfigInt(value=2, min_value=0, max_value=3)
-        self.config['VAS_phase'] = ConfigEnum(choices=('-1', '1'), value='1')
+        self.config.sc_phase = ConfigInt(
+            value=2, min_value=0, max_value=3, wrapping=True)
+        self.config.VAS_phase = ConfigEnum(choices=('-1', '1'), value='1')
 
     def on_set_config(self):
         super(ModulateUV, self).on_set_config()
         self.update_config()
         # phase is in "quarter cycles"
-        phase = float(self.config['sc_phase']) + 0.5
-        v_axis_switch = int(self.config['VAS_phase'])
+        phase = float(self.config.sc_phase) + 0.5
+        v_axis_switch = int(self.config.VAS_phase)
         cell = numpy.empty([4, 8, 4, 2], dtype=numpy.float32)
         for z in range(cell.shape[0]):
             for f in range(2):

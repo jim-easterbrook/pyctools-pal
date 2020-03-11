@@ -55,6 +55,9 @@ class PostFilterPAL(Compound):
 
     """
     def __init__(self, config={}, **kwds):
+        cfg = {}
+        cfg.update(kwds)
+        cfg.update(config)
         super(PostFilterPAL, self).__init__(
             resize = Resize(),
             fildes = FilterDesign(
@@ -63,13 +66,21 @@ class PostFilterPAL(Compound):
                 weight='   1.0, 1.0,   0.0,   0.0,   1.0,   1.0',
                 aperture=61,
                 ),
+            config = cfg,
+            config_map = {
+                'frequency'        : ('fildes.frequency',),
+                'gain'             : ('fildes.gain',),
+                'weight'           : ('fildes.weight',),
+                'aperture'         : ('fildes.aperture',),
+                'outframe_pool_len': ('resize.outframe_pool_len',),
+                },
             linkages = {
                 ('self',   'input')    : [('resize', 'input')],
                 ('fildes', 'filter')   : [('resize', 'filter')],
                 ('resize', 'output')   : [('self',   'output')],
                 ('fildes', 'response') : [('self',   'response')],
-                },
-            config=config, **kwds)
+                }
+            )
 
 
 class UVtoC(Matrix):
@@ -100,6 +111,9 @@ class Coder(Compound):
 
     """
     def __init__(self, config={}, **kwds):
+        cfg = {}
+        cfg.update(kwds)
+        cfg.update(config)
         super(Coder, self).__init__(
             rgbyuv = RGBtoYUV(outframe_pool_len=5, matrix='601', audit='Y'),
             prefilter = PreFilterUV(),
@@ -108,6 +122,16 @@ class Coder(Compound):
             assemble = Arithmetic2(
                 func='((data1 + data2) * pt_float(140.0 / 255.0)) + pt_float(64.0)'),
             postfilter = PostFilterPAL(),
+            config = cfg,
+            config_map = {
+                'sc_phase'         : ('modulator.sc_phase',),
+                'VAS_phase'        : ('modulator.VAS_phase',),
+                'frequency'        : ('postfilter.frequency',),
+                'gain'             : ('postfilter.gain',),
+                'weight'           : ('postfilter.weight',),
+                'aperture'         : ('postfilter.aperture',),
+                'outframe_pool_len': ('postfilter.outframe_pool_len',),
+                },
             linkages = {
                 ('self',       'input')     : [('rgbyuv',     'input')],
                 ('rgbyuv',     'output_Y')  : [('assemble',   'input1')],
@@ -119,5 +143,5 @@ class Coder(Compound):
                 ('postfilter', 'output')    : [('self',       'output')],
                 ('prefilter',  'filter')    : [('self',       'pre_filt')],
                 ('postfilter', 'response')  : [('self',       'post_resp')],
-                },
-            config=config, **kwds)
+                }
+            )
