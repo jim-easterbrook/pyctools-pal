@@ -56,8 +56,8 @@ class PostFilterPAL(Compound):
     """
     def __init__(self, config={}, **kwds):
         cfg = {}
-        cfg.update(kwds)
         cfg.update(config)
+        cfg.update(kwds)
         super(PostFilterPAL, self).__init__(
             resize = Resize(),
             fildes = FilterDesign(
@@ -112,8 +112,8 @@ class Coder(Compound):
     """
     def __init__(self, config={}, **kwds):
         cfg = {}
-        cfg.update(kwds)
         cfg.update(config)
+        cfg.update(kwds)
         super(Coder, self).__init__(
             rgbyuv = RGBtoYUV(outframe_pool_len=5, matrix='601', audit='Y'),
             prefilter = PreFilterUV(),

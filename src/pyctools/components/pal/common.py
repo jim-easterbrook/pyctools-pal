@@ -40,8 +40,8 @@ class To4Fsc(ImageResizerX):
     def __init__(self, config={}, **kwds):
         # 4fsc = 922 active samples/line, Rec 601 = 702 active samples/line
         cfg = {'up': 461, 'down': 351, 'aperture': 12}
-        cfg.update(kwds)
         cfg.update(config)
+        cfg.update(kwds)
         super(To4Fsc, self).__init__(config=config, **kwds)
 
 
@@ -55,8 +55,8 @@ class From4Fsc(ImageResizerX):
     def __init__(self, config={}, **kwds):
         # 4fsc = 922 active samples/line, Rec 601 = 702 active samples/line
         cfg = {'up': 351, 'down': 461, 'aperture': 12}
-        cfg.update(kwds)
         cfg.update(config)
+        cfg.update(kwds)
         super(From4Fsc, self).__init__(config=config, **kwds)
 
 

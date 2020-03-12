@@ -59,8 +59,8 @@ class PostFilterY(Compound):
     """
     def __init__(self, config={}, **kwds):
         cfg = {}
-        cfg.update(kwds)
         cfg.update(config)
+        cfg.update(kwds)
         super(PostFilterY, self).__init__(
             resize = Resize(),
             fildes = FilterDesign(
@@ -92,8 +92,8 @@ class PostFilterUV(ImageResizerX):
     """
     def __init__(self, config={}, **kwds):
         cfg = {'aperture': 12, 'filgen.xcut': 22}
-        cfg.update(kwds)
         cfg.update(config)
+        cfg.update(kwds)
         super(PostFilterUV, self).__init__(config=cfg, **kwds)
 
 
@@ -107,8 +107,8 @@ class Decoder(Compound):
     """
     def __init__(self, config={}, **kwds):
         cfg = {}
-        cfg.update(kwds)
         cfg.update(config)
+        cfg.update(kwds)
         super(Decoder, self).__init__(
             setlevel = Arithmetic(
                 func='(data - pt_float(64)) * pt_float(255.0 / 140.0)'),
