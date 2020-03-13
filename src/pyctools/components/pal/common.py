@@ -41,8 +41,7 @@ class To4Fsc(ImageResizerX):
         # 4fsc = 922 active samples/line, Rec 601 = 702 active samples/line
         cfg = {'up': 461, 'down': 351, 'aperture': 12}
         cfg.update(config)
-        cfg.update(kwds)
-        super(To4Fsc, self).__init__(config=config, **kwds)
+        super(To4Fsc, self).__init__(config=cfg, **kwds)
 
 
 class From4Fsc(ImageResizerX):
@@ -56,8 +55,7 @@ class From4Fsc(ImageResizerX):
         # 4fsc = 922 active samples/line, Rec 601 = 702 active samples/line
         cfg = {'up': 351, 'down': 461, 'aperture': 12}
         cfg.update(config)
-        cfg.update(kwds)
-        super(From4Fsc, self).__init__(config=config, **kwds)
+        super(From4Fsc, self).__init__(config=cfg, **kwds)
 
 
 class ModulateUV(Modulate):

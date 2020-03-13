@@ -27,7 +27,7 @@ from pyctools.components.arithmetic import Arithmetic2
 from pyctools.components.colourspace.rgbtoyuv import RGBtoYUV
 from pyctools.components.colourspace.matrix import Matrix
 from pyctools.components.interp.filterdesign import FilterDesign
-from pyctools.components.interp.gaussianfilter import GaussianFilterCore
+from pyctools.components.interp.gaussianfilter import GaussianFilter
 from pyctools.components.interp.resize import Resize
 
 from .common import ModulateUV
@@ -43,7 +43,7 @@ class PreFilterUV(Resize):
     """
     def __init__(self, config={}, **kwds):
         super(PreFilterUV, self).__init__(config=config, **kwds)
-        self.filter(GaussianFilterCore(x_sigma=1.659))
+        self.filter(GaussianFilter.core(x_sigma=1.659))
 
 
 class PostFilterPAL(Compound):

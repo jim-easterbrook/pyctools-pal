@@ -24,7 +24,7 @@ import math
 
 import numpy
 
-from pyctools.components.interp.filtergenerator import FilterGeneratorCore
+from pyctools.components.interp.filtergenerator import FilterGenerator
 from pyctools.components.interp.resize import Resize
 from pyctools.core.base import Transformer
 from pyctools.core.config import ConfigBool, ConfigEnum, ConfigFloat, ConfigInt
@@ -179,4 +179,4 @@ class PostFilterUV(Resize):
     """
     def __init__(self, config={}, **kwds):
         super(PostFilterUV, self).__init__(config=config, **kwds)
-        self.filter(FilterGeneratorCore(x_ap=16, x_cut=25))
+        self.filter(FilterGenerator.core(x_ap=16, x_cut=25))
