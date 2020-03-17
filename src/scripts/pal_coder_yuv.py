@@ -22,23 +22,24 @@ class ComponentNetwork(Compound):
                  'writer': (110.0, -160.0)}
     expanded = {'coder': False}
     user_config = {
+        'reader': {'format': 'YUV422',
+                   'noaudit': True,
+                   'path': '/home/jim/Documents/projects/pyctools/pyctools-pal/BBC_pal/circ_newpat_component.mov'},
         'writer': {'fourcc': 'Y16',
                    'path': '/home/jim/Documents/projects/pyctools/pyctools-pal/coded_pal.y16'},
-        'reader': {'noaudit': True,
-                   'path': '/home/jim/Documents/projects/pyctools/pyctools-pal/BBC_pal/circ_newpat_component.mov'},
         }
 
 
     def __init__(self):
         super(ComponentNetwork, self).__init__(
-            audit = pyctools.components.io.dumpmetadata.DumpMetadata(),
-            display = pyctools.components.qt.qtdisplay.QtDisplay(),
-            writer = pyctools.components.io.rawfilewriter.RawFileWriter(),
-            coder = pyctools.components.pal.coder.CoderCore(),
             reader = pyctools.components.io.videofilereader2.VideoFileReader2(),
-            linkages = {('coder', 'output'): [('display', 'input'),
+            coder = pyctools.components.pal.coder.CoderCore(),
+            writer = pyctools.components.io.rawfilewriter.RawFileWriter(),
+            display = pyctools.components.qt.qtdisplay.QtDisplay(),
+            audit = pyctools.components.io.dumpmetadata.DumpMetadata(),
+            linkages = {('coder', 'output'): [('audit', 'input'),
                                               ('writer', 'input_Y_RGB'),
-                                              ('audit', 'input')],
+                                              ('display', 'input')],
                         ('reader', 'output_UV'): [('coder', 'input_UV')],
                         ('reader', 'output_Y_RGB'): [('coder', 'input_Y')]}
             )
