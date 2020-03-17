@@ -17,7 +17,7 @@
 #  along with this program.  If not, see
 #  <http://www.gnu.org/licenses/>.
 
-__all__ = ['Coder', 'PostFilterPAL', 'PreFilterUV', 'UVtoC']
+__all__ = ['Coder', 'CoderCore', 'PostFilterPAL', 'PreFilterUV', 'UVtoC']
 
 import numpy
 
@@ -30,7 +30,7 @@ from pyctools.components.interp.filterdesign import FilterDesign
 from pyctools.components.interp.gaussianfilter import GaussianFilter
 from pyctools.components.interp.resize import Resize
 
-from .common import ModulateUV
+from .common import ModulateUV, To4Fsc
 
 
 class PreFilterUV(Resize):
@@ -105,9 +105,8 @@ class UVtoC(Matrix):
 class Coder(Compound):
     """Conventional PAL coder.
 
-    The input is RGB, assumed to be Rec 601 13.5 MHz sampled. The output
-    is sampled at 4 fsc. Other input sampling rates will work, but the
-    output will not be a valid PAL signal.
+    The input is RGB, sampled at 4 fsc. Other input sampling rates will
+    work, but the output will not be a valid PAL signal.
 
     """
     def __init__(self, config={}, **kwds):
@@ -143,5 +142,45 @@ class Coder(Compound):
                 ('postfilter', 'output')    : [('self',       'output')],
                 ('prefilter',  'filter')    : [('self',       'pre_filt')],
                 ('postfilter', 'response')  : [('self',       'post_resp')],
+                }
+            )
+
+
+class CoderCore(Compound):
+    """Conventional PAL coder core.
+
+    The input is YUV422, assumed to be Rec 601 13.5 MHz sampled. The
+    output is sampled at 4 fsc. Other input sampling rates will work,
+    but the output will not be a valid PAL signal.
+
+    """
+    def __init__(self, config={}, **kwds):
+        cfg = {}
+        cfg.update(config)
+        cfg.update(kwds)
+        super(CoderCore, self).__init__(
+            scale_Y = To4Fsc(outframe_pool_len=5),
+            scale_UV = To4Fsc(up=922),
+            prefilter = PreFilterUV(),
+            modulator = ModulateUV(),
+            matrix = UVtoC(),
+            assemble = Arithmetic2(
+                func='((data1 + data2) * pt_float(140.0 / 255.0)) + pt_float(64.0)'),
+            config = cfg,
+            config_map = {
+                'sc_phase'         : ('modulator.sc_phase',),
+                'VAS_phase'        : ('modulator.VAS_phase',),
+                'outframe_pool_len': ('assemble.outframe_pool_len',),
+                },
+            linkages = {
+                ('self',       'input_Y')  : [('scale_Y',    'input')],
+                ('scale_Y',    'output')   : [('assemble',   'input1')],
+                ('self',       'input_UV') : [('scale_UV',   'input')],
+                ('scale_UV',   'output')   : [('prefilter',  'input')],
+                ('prefilter',  'output')   : [('modulator',  'input')],
+                ('modulator',  'output')   : [('matrix',     'input')],
+                ('matrix',     'output')   : [('assemble',   'input2')],
+                ('assemble',   'output')   : [('self',       'output')],
+                ('prefilter',  'filter')   : [('self',       'pre_filt')],
                 }
             )
