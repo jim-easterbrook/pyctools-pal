@@ -10,66 +10,49 @@ from PyQt5 import QtCore, QtWidgets
 from pyctools.core.compound import Compound
 import pyctools.components.io.dumpmetadata
 import pyctools.components.io.rawfilewriter
-import pyctools.components.io.videofilereader
+import pyctools.components.io.videofilereader2
 import pyctools.components.pal.coder
 import pyctools.components.pal.common
 import pyctools.components.qt.qtdisplay
 
-class Network(object):
-    components = \
-{   'audit': {   'class': 'pyctools.components.io.dumpmetadata.DumpMetadata',
-                 'config': '{}',
-                 'pos': (110.0, 60.0)},
-    'coder': {   'class': 'pyctools.components.pal.coder.Coder',
-                 'config': "{'rgbyuv': {'matrix': '601', 'audit': 'Y', "
-                           "'outframe_pool_len': 5}, 'prefilter': {}, "
-                           "'modulator': {}, 'matrix': {}, 'assemble': "
-                           "{'func': '((data1 + data2) * pt_float(140.0 / "
-                           "255.0)) + pt_float(64.0)'}, 'postfilter': "
-                           "{'resize': {}, 'fildes': {'frequency': '0.0, "
-                           "0.307, 0.317, 0.346, 0.356, 0.5', 'gain': '     "
-                           "1.0, 1.0,   1.0,   0.0,   0.0,   0.0', 'weight': "
-                           "'   1.0, 1.0,   0.0,   0.0,   1.0,   1.0', "
-                           "'aperture': 61}}}",
-                 'expanded': False,
-                 'pos': (-20.0, -50.0)},
-    'display': {   'class': 'pyctools.components.qt.qtdisplay.QtDisplay',
-                   'config': '{}',
-                   'pos': (110.0, -50.0)},
-    'filereader': {   'class': 'pyctools.components.io.videofilereader.VideoFileReader',
-                      'config': "{'path': "
-                                "'/home/jim/Videos/test_seqs/mobcal.avi', "
-                                "'noaudit': True}",
-                      'pos': (-280.0, -50.0)},
-    'filewriter': {   'class': 'pyctools.components.io.rawfilewriter.RawFileWriter',
-                      'config': "{'path': "
-                                "'/home/jim/Documents/projects/pyctools/pyctools-pal/coded_pal.pal', "
-                                "'fourcc': 'Y16'}",
-                      'pos': (110.0, -160.0)},
-    'resample': {   'class': 'pyctools.components.pal.common.To4Fsc',
-                    'config': "{'resize': {'xup': 461, 'xdown': 351}, "
-                              "'filgen': {'xup': 461, 'xdown': 351, "
-                              "'xaperture': 12}}",
-                    'expanded': False,
-                    'pos': (-150.0, -50.0)}}
-    linkages = \
-{   ('coder', 'output'): [   ('filewriter', 'input_Y_RGB'),
-                             ('display', 'input'),
-                             ('audit', 'input')],
-    ('filereader', 'output'): [('resample', 'input')],
-    ('resample', 'output'): [('coder', 'input')]}
+class ComponentNetwork(Compound):
+    positions = {'audit': (110.0, 60.0),
+                 'coder': (-20.0, -50.0),
+                 'display': (110.0, -50.0),
+                 'filereader': (-280.0, -50.0),
+                 'filewriter': (110.0, -160.0),
+                 'resample': (-150.0, -50.0)}
+    expanded = {'coder': False, 'resample': False}
+    user_config = {
+        'filereader': {'format': 'RGB',
+                       'noaudit': True,
+                       'path': '/home/jim/Videos/test_seqs/mobcal.avi'},
+        'filewriter': {'fourcc': 'Y16',
+                       'path': '/home/jim/Documents/projects/pyctools/pyctools-pal/coded_pal.pal'},
+        }
 
-    def make(self):
-        comps = {}
-        for name, component in self.components.items():
-            comps[name] = eval(component['class'])(config=eval(component['config']))
-        return Compound(linkages=self.linkages, **comps)
+
+    def __init__(self):
+        super(ComponentNetwork, self).__init__(
+            filereader = pyctools.components.io.videofilereader2.VideoFileReader2(),
+            resample = pyctools.components.pal.common.To4Fsc(),
+            filewriter = pyctools.components.io.rawfilewriter.RawFileWriter(),
+            display = pyctools.components.qt.qtdisplay.QtDisplay(),
+            coder = pyctools.components.pal.coder.Coder(),
+            audit = pyctools.components.io.dumpmetadata.DumpMetadata(),
+            linkages = {('coder', 'output'): [('audit', 'input'),
+                                              ('display', 'input'),
+                                              ('filewriter', 'input_Y_RGB')],
+                        ('filereader', 'output_Y_RGB'): [('resample', 'input')],
+                        ('resample', 'output'): [('coder', 'input')]}
+            )
 
 if __name__ == '__main__':
     QtWidgets.QApplication.setAttribute(QtCore.Qt.AA_X11InitThreads)
     app = QtWidgets.QApplication(sys.argv)
 
-    comp = Network().make()
+    comp = ComponentNetwork()
+    comp.set_config(comp.user_config)
     cnf = comp.get_config()
     parser = argparse.ArgumentParser(
         formatter_class=argparse.ArgumentDefaultsHelpFormatter)
