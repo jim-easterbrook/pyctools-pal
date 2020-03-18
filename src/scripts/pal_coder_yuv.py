@@ -9,8 +9,8 @@ from PyQt5 import QtCore, QtWidgets
 
 from pyctools.core.compound import Compound
 import pyctools.components.io.dumpmetadata
-import pyctools.components.io.rawfilewriter
 import pyctools.components.io.videofilereader2
+import pyctools.components.io.videofilewriter2
 import pyctools.components.pal.coder
 import pyctools.components.qt.qtdisplay
 
@@ -22,24 +22,25 @@ class ComponentNetwork(Compound):
                  'writer': (110.0, -160.0)}
     expanded = {'coder': False}
     user_config = {
+        'writer': {'input': 'Y',
+                   'path': '/home/jim/Documents/projects/pyctools/pyctools-pal/coded_pal.y16',
+                   'pix_fmt': 'gray16le'},
         'reader': {'format': 'YUV422',
                    'noaudit': True,
                    'path': '/home/jim/Documents/projects/pyctools/pyctools-pal/BBC_pal/circ_newpat_component.mov'},
-        'writer': {'fourcc': 'Y16',
-                   'path': '/home/jim/Documents/projects/pyctools/pyctools-pal/coded_pal.y16'},
         }
 
 
     def __init__(self):
         super(ComponentNetwork, self).__init__(
-            reader = pyctools.components.io.videofilereader2.VideoFileReader2(),
-            coder = pyctools.components.pal.coder.CoderCore(),
-            writer = pyctools.components.io.rawfilewriter.RawFileWriter(),
-            display = pyctools.components.qt.qtdisplay.QtDisplay(),
+            writer = pyctools.components.io.videofilewriter2.VideoFileWriter2(),
             audit = pyctools.components.io.dumpmetadata.DumpMetadata(),
-            linkages = {('coder', 'output'): [('audit', 'input'),
-                                              ('writer', 'input_Y_RGB'),
-                                              ('display', 'input')],
+            display = pyctools.components.qt.qtdisplay.QtDisplay(),
+            coder = pyctools.components.pal.coder.CoderCore(),
+            reader = pyctools.components.io.videofilereader2.VideoFileReader2(),
+            linkages = {('coder', 'output'): [('writer', 'input_Y_RGB'),
+                                              ('display', 'input'),
+                                              ('audit', 'input')],
                         ('reader', 'output_UV'): [('coder', 'input_UV')],
                         ('reader', 'output_Y_RGB'): [('coder', 'input_Y')]}
             )

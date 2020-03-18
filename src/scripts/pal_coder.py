@@ -9,8 +9,8 @@ from PyQt5 import QtCore, QtWidgets
 
 from pyctools.core.compound import Compound
 import pyctools.components.io.dumpmetadata
-import pyctools.components.io.rawfilewriter
 import pyctools.components.io.videofilereader2
+import pyctools.components.io.videofilewriter2
 import pyctools.components.pal.coder
 import pyctools.components.pal.common
 import pyctools.components.qt.qtdisplay
@@ -24,25 +24,26 @@ class ComponentNetwork(Compound):
                  'resample': (-150.0, -50.0)}
     expanded = {'coder': False, 'resample': False}
     user_config = {
+        'filewriter': {'input': 'Y',
+                       'path': '/home/jim/Documents/projects/pyctools/pyctools-pal/coded_pal.y16',
+                       'pix_fmt': 'gray16le'},
         'filereader': {'format': 'RGB',
                        'noaudit': True,
                        'path': '/home/jim/Videos/test_seqs/mobcal.avi'},
-        'filewriter': {'fourcc': 'Y16',
-                       'path': '/home/jim/Documents/projects/pyctools/pyctools-pal/coded_pal.pal'},
         }
 
 
     def __init__(self):
         super(ComponentNetwork, self).__init__(
-            filereader = pyctools.components.io.videofilereader2.VideoFileReader2(),
-            resample = pyctools.components.pal.common.To4Fsc(),
-            filewriter = pyctools.components.io.rawfilewriter.RawFileWriter(),
-            display = pyctools.components.qt.qtdisplay.QtDisplay(),
-            coder = pyctools.components.pal.coder.Coder(),
+            filewriter = pyctools.components.io.videofilewriter2.VideoFileWriter2(),
             audit = pyctools.components.io.dumpmetadata.DumpMetadata(),
-            linkages = {('coder', 'output'): [('audit', 'input'),
+            coder = pyctools.components.pal.coder.Coder(),
+            display = pyctools.components.qt.qtdisplay.QtDisplay(),
+            resample = pyctools.components.pal.common.To4Fsc(),
+            filereader = pyctools.components.io.videofilereader2.VideoFileReader2(),
+            linkages = {('coder', 'output'): [('filewriter', 'input_Y_RGB'),
                                               ('display', 'input'),
-                                              ('filewriter', 'input_Y_RGB')],
+                                              ('audit', 'input')],
                         ('filereader', 'output_Y_RGB'): [('resample', 'input')],
                         ('resample', 'output'): [('coder', 'input')]}
             )

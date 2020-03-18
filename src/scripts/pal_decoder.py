@@ -24,28 +24,28 @@ class ComponentNetwork(Compound):
                  'resample': (290.0, 150.0)}
     expanded = {'decoder': False, 'resample': False}
     user_config = {
+        'display': {'framerate': 50, 'stats': True, 'title': 'Simple PAL'},
         'filereader': {'format': 'Y',
                        'looping': 'repeat',
                        'noaudit': True,
-                       'path': '/home/jim/Documents/projects/pyctools/pyctools-pal/coded_pal.pal',
+                       'path': '/home/jim/Documents/projects/pyctools/pyctools-pal/coded_pal.y16',
                        'zperiod': 4},
-        'display': {'framerate': 50, 'stats': True, 'title': 'Simple PAL'},
         }
 
 
     def __init__(self):
         super(ComponentNetwork, self).__init__(
-            filereader = pyctools.components.io.videofilereader2.VideoFileReader2(),
-            resample = pyctools.components.pal.common.From4Fsc(),
-            display = pyctools.components.qt.qtdisplay.QtDisplay(),
-            deint = pyctools.components.deinterlace.weston3field.Weston3Field(),
-            decoder = pyctools.components.pal.decoder.Decoder(),
             audit = pyctools.components.io.dumpmetadata.DumpMetadata(),
+            decoder = pyctools.components.pal.decoder.Decoder(),
+            deint = pyctools.components.deinterlace.weston3field.Weston3Field(),
+            display = pyctools.components.qt.qtdisplay.QtDisplay(),
+            resample = pyctools.components.pal.common.From4Fsc(),
+            filereader = pyctools.components.io.videofilereader2.VideoFileReader2(),
             linkages = {('decoder', 'output'): [('resample', 'input')],
                         ('deint', 'output'): [('display', 'input')],
                         ('filereader', 'output_Y_RGB'): [('decoder', 'input')],
-                        ('resample', 'output'): [('deint', 'input'),
-                                                 ('audit', 'input')]}
+                        ('resample', 'output'): [('audit', 'input'),
+                                                 ('deint', 'input')]}
             )
 
 if __name__ == '__main__':
