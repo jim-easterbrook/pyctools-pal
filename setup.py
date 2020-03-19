@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 #  Pyctools-PAL - PAL coding and decoding with Pyctools.
 #  http://github.com/jim-easterbrook/pyctools-pal
-#  Copyright (C) 2014-18  Jim Easterbrook  jim@jim-easterbrook.me.uk
+#  Copyright (C) 2014-20  Jim Easterbrook  jim@jim-easterbrook.me.uk
 #
 #  This program is free software: you can redistribute it and/or
 #  modify it under the terms of the GNU General Public License as
@@ -17,10 +17,12 @@
 #  along with this program.  If not, see
 #  <http://www.gnu.org/licenses/>.
 
-from Cython.Distutils import build_ext
 import os
 from setuptools import setup
 import sys
+
+# import Cython after distutils/setuptools
+from Cython.Build import cythonize
 
 from pyctools.setup import find_ext_modules, find_packages, write_init_files
 
@@ -34,10 +36,8 @@ packages = find_packages()
 write_init_files(packages)
 
 # find Cython extensions
-ext_modules = find_ext_modules()
-
-# Use Cython version of 'build_ext' command
-cmdclass = {'build_ext': build_ext}
+ext_modules = cythonize(find_ext_modules(), compiler_directives={
+    'language_level' : sys.version_info[0]})
 
 with open('README.rst') as f:
     long_description = f.read()
@@ -70,6 +70,5 @@ setup(name = 'pyctools.pal',
       ext_modules = ext_modules,
       package_dir = {'' : 'src'},
       install_requires = ['pyctools.core >= 0.4.1'],
-      cmdclass = cmdclass,
       zip_safe = False,
       )
