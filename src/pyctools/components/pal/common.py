@@ -33,8 +33,22 @@ from pyctools.components.modulate import Modulate
 class To4Fsc(ImageResizerX):
     """Convert 13.5 MHz (Rec 601) sampled image to 4 fsc sampling.
 
-    The conversion is not exact as 4 fsc is skewed by one pixel over a
-    frame.
+    Digital PAL hardware, such as video tape recorders, used a sampling
+    frequency of 4 x PAL subcarrier frequency, locked to the PAL colour
+    burst. This makes coder / decoder design easier, but at the expense
+    of possibly having to convert to/from 13.5 MHz "Rec 601" sampling.
+
+    Fsc is 4.43361875 MHz and 4 fsc is 17.734475 MHz. The line frequency
+    is 15.625 kHz, so each full line has 1135.0064 samples, compared to
+    864 with 13.5 MHz sampling. The non-integer number of pixels on each
+    line makes the 4 fsc sampling pattern non-orthogonal.
+
+    This complication can be safely ignored in computer simulations if
+    there is never any requirement to interface to actual PAL hardware.
+    At BBC R&D we used a simple scaling of 461 / 351, which would give
+    approximately 1134.77 samples per full line. As we only processed
+    the active picture area and the images were never converted to a
+    continuous signal this non-integer number was not a problem.
 
     """
     def __init__(self, config={}, **kwds):
@@ -47,8 +61,7 @@ class To4Fsc(ImageResizerX):
 class From4Fsc(ImageResizerX):
     """Convert 4 fsc sampled image to 13.5 MHz (Rec 601) sampling.
 
-    The conversion is not exact as 4 fsc is skewed by one pixel over a
-    frame.
+    See :py:class:`To4Fsc` for more information.
 
     """
     def __init__(self, config={}, **kwds):
