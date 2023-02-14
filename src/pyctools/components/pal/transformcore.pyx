@@ -44,7 +44,7 @@ def transform_filter(numpy.ndarray[CMPLX_t, ndim=4] out_data,
                 for j in range(y_blk):
                     for i in range(x_blk):
                         out_data[j, y, i, x] = in_data[j, y, i, x]
-            elif mode == 'l':
+            elif mode == 'l'.encode('ascii'):
                 # scale to lower of sample and reflection
                 for j in range(y_blk):
                     for i in range(x_blk):
@@ -58,7 +58,7 @@ def transform_filter(numpy.ndarray[CMPLX_t, ndim=4] out_data,
                         else:
                             out_data[j, y, i, x] = in_val * m_ref / m_in
                             out_data[j, y_ref, i, x_ref] = ref_val
-            elif mode == '2':
+            elif mode == '2'.encode('ascii'):
                 # 2D threshold
                 for j in range(y_blk):
                     for i in range(x_blk):
